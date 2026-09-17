@@ -854,12 +854,12 @@
   }
   function drawVisionMask(){
     ctx.save();
-    ctx.fillStyle = 'rgba(4,2,2,0.86)';
+    ctx.fillStyle = 'rgba(4,2,2,0.55)';
     ctx.fillRect(0,0,W,H);
     ctx.globalCompositeOperation='destination-out';
-    let g = ctx.createRadialGradient(player.x,player.y,4,player.x,player.y,140);
+    let g = ctx.createRadialGradient(player.x,player.y,4,player.x,player.y,190);
     g.addColorStop(0,'rgba(0,0,0,1)'); g.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(player.x,player.y,140,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(player.x,player.y,190,0,Math.PI*2); ctx.fill();
     if (flashlightOn && battery>0){
       ctx.save();
       ctx.translate(player.x,player.y); ctx.rotate(player.angle);
