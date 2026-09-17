@@ -715,17 +715,21 @@
     ctx.save(); ctx.translate(c.x,c.y);
     ctx.fillStyle = '#d8cbb8'; ctx.fillRect(-3,-2,6,14);
     if (lit){
-      // fully lit: bright, steady flame with a strong halo that lights up the room around it
-      const flick = 0.9+Math.random()*0.1;
-      ctx.fillStyle = 'rgba(255,225,160,0.5)';
-      ctx.beginPath(); ctx.arc(0,-9,46*flick,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle = 'rgba(255,205,120,0.75)';
-      ctx.beginPath(); ctx.arc(0,-9,26*flick,0,Math.PI*2); ctx.fill();
-      ctx.shadowColor = '#ffcf7a'; ctx.shadowBlur = 18;
-      ctx.fillStyle = `rgba(255,235,190,${flick})`;
-      ctx.beginPath(); ctx.ellipse(0,-12,5.5,10*flick,0,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#fff8e6';
-      ctx.beginPath(); ctx.ellipse(0,-12,2.5,5*flick,0,0,Math.PI*2); ctx.fill();
+      // fully lit: big bold flame with a strong multi-layer halo that lights up the room around it
+      const flick = 0.92+Math.random()*0.08;
+      ctx.fillStyle = 'rgba(255,215,140,0.4)';
+      ctx.beginPath(); ctx.arc(0,-9,70*flick,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,200,110,0.6)';
+      ctx.beginPath(); ctx.arc(0,-9,40*flick,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,190,90,0.85)';
+      ctx.beginPath(); ctx.arc(0,-9,20*flick,0,Math.PI*2); ctx.fill();
+      ctx.shadowColor = '#ffcf7a'; ctx.shadowBlur = 28;
+      ctx.fillStyle = `rgba(255,140,40,${flick})`;
+      ctx.beginPath(); ctx.ellipse(0,-13,7,13*flick,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = `rgba(255,225,150,${flick})`;
+      ctx.beginPath(); ctx.ellipse(0,-13,4.5,9*flick,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#fffdf2';
+      ctx.beginPath(); ctx.ellipse(0,-12,2.2,5*flick,0,0,Math.PI*2); ctx.fill();
       ctx.shadowBlur = 0;
     } else {
       // not yet lit: a soft pale pre-glow so it's easy to spot from a distance, clearly not burning yet
@@ -878,9 +882,9 @@
     // lit candles keep lighting up their patch of the room permanently
     for (const c of LEVELS[level].candles){
       if (!candlesFound.includes(c)) continue;
-      let cg2 = ctx.createRadialGradient(c.x,c.y,2,c.x,c.y,90);
-      cg2.addColorStop(0,'rgba(0,0,0,0.85)'); cg2.addColorStop(1,'rgba(0,0,0,0)');
-      ctx.fillStyle=cg2; ctx.beginPath(); ctx.arc(c.x,c.y,90,0,Math.PI*2); ctx.fill();
+      let cg2 = ctx.createRadialGradient(c.x,c.y,2,c.x,c.y,135);
+      cg2.addColorStop(0,'rgba(0,0,0,0.9)'); cg2.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=cg2; ctx.beginPath(); ctx.arc(c.x,c.y,135,0,Math.PI*2); ctx.fill();
     }
     if (reaper && reaperSpawned){
       let rg = ctx.createRadialGradient(reaper.x,reaper.y,2,reaper.x,reaper.y,55);
