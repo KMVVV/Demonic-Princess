@@ -1,0 +1,1034 @@
+<title>SHE TURNS FOUR</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Creepster&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+  :root{
+    --bg:#0a0708; --panel:#15100f; --ink:#e8dcd0; --muted:#a9948a;
+    --accent:#ff2d2d; --accent2:#ffb703; --line:#3a2a26;
+  }
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Crimson Text',Georgia,serif; margin:0; padding-block:24px;
+    min-height:100%; display:flex; flex-direction:column; align-items:center;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ width:100%; max-width:840px; padding:0 16px; display:flex; flex-direction:column; align-items:center; gap:14px;}
+  h1{
+    font-family:'Creepster',cursive; font-size:clamp(32px,8vw,58px); letter-spacing:4px; text-align:center; margin:6px 0 0;
+    color:var(--accent); text-shadow:0 0 18px rgba(255,45,45,.55), 0 0 2px #000; font-weight:400;
+    text-wrap:balance;
+  }
+  .sub{ color:var(--muted); text-align:center; max-width:560px; line-height:1.6; font-size:15.5px; margin:0;}
+  .stage{
+    position:relative; width:100%; max-width:800px; aspect-ratio:800/600;
+    background:#000; border:2px solid var(--line); border-radius:6px; overflow:hidden;
+    box-shadow:0 0 40px rgba(255,45,45,.12), inset 0 0 60px rgba(0,0,0,.8);
+    touch-action:none;
+  }
+  canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .overlay{
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:16px; text-align:center; padding:24px; background:rgba(5,3,3,.88); backdrop-filter:blur(2px);
+  }
+  .overlay img{ max-width:150px; border-radius:6px; box-shadow:0 0 30px rgba(255,45,45,.4); filter:contrast(1.05) saturate(.9);}
+  .overlay h2{ color:var(--accent); letter-spacing:2px; margin:0; font-size:clamp(20px,5vw,30px); font-family:'Creepster',cursive; font-weight:400;}
+  .overlay p{ color:var(--muted); max-width:460px; font-size:14.5px; line-height:1.65; margin:0;}
+  button{
+    font-family:'Crimson Text',Georgia,serif; font-size:15px; letter-spacing:2px; padding:12px 26px; border-radius:4px;
+    border:1px solid var(--accent); background:transparent; color:var(--ink); cursor:pointer;
+    transition:background .15s, color .15s;
+  }
+  button:hover{ background:var(--accent); color:#100; }
+  .hud{
+    width:100%; max-width:800px; display:flex; justify-content:space-between; align-items:center;
+    font-size:13px; letter-spacing:1px; color:var(--muted); gap:10px; flex-wrap:wrap;
+  }
+  .hud b{ color:var(--ink); }
+  .meter{ width:110px; height:8px; border:1px solid var(--line); border-radius:4px; overflow:hidden; display:inline-block; vertical-align:middle; margin-left:6px;}
+  .meter i{ display:block; height:100%; background:var(--accent2); }
+  #touchLight, #touchIgnite{
+    position:absolute; bottom:14px; width:76px; height:76px; border-radius:50%;
+    font-size:11px; letter-spacing:1px; display:none; align-items:center; justify-content:center; text-align:center;
+    user-select:none; -webkit-user-select:none;
+  }
+  #touchLight{
+    right:14px; background:rgba(255,183,3,.15); border:2px solid var(--accent2); color:var(--accent2);
+  }
+  #touchIgnite{
+    left:14px; background:rgba(255,120,40,.15); border:2px solid #ff7a28; color:#ff9d54;
+  }
+  @media (pointer:coarse){ #touchLight, #touchIgnite{ display:flex; } }
+  #candlePrompt{
+    position:absolute; left:50%; top:14px; transform:translateX(-50%);
+    background:rgba(10,7,7,.75); border:1px solid var(--line); color:var(--accent2);
+    font-size:12px; letter-spacing:1px; padding:6px 12px; border-radius:4px; display:none;
+    pointer-events:none; white-space:nowrap;
+  }
+  .credit{ color:#5a4a44; font-size:11px; letter-spacing:1px; text-align:center; }
+
+  .board{ width:100%; max-width:360px; margin-top:4px; }
+  .board h3{
+    font-family:'Creepster',cursive; font-weight:400; letter-spacing:2px; color:var(--accent2);
+    font-size:16px; margin:0 0 6px; text-align:center;
+  }
+  .board ol{ list-style:none; margin:0; padding:0; border:1px solid var(--line); border-radius:4px; overflow:hidden; }
+  .board li{
+    display:flex; justify-content:space-between; gap:10px; padding:6px 12px; font-size:13.5px;
+    background:rgba(255,255,255,0.02);
+  }
+  .board li:nth-child(even){ background:rgba(255,255,255,0.045); }
+  .board li:first-child{ color:var(--accent2); }
+  .board .bn{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .board .bs{ font-variant-numeric:tabular-nums; color:var(--ink); flex-shrink:0; }
+  .scoreLine{ font-size:15px; letter-spacing:1px; color:var(--ink); }
+  .scoreLine b{ color:var(--accent2); font-size:20px; }
+  .nameRow{ display:flex; gap:8px; width:100%; max-width:360px; }
+  .nameRow input{
+    flex:1; min-width:0; font-family:inherit; font-size:14px; background:#150f0e; color:var(--ink);
+    border:1px solid var(--line); border-radius:4px; padding:10px 12px; letter-spacing:1px;
+  }
+  .nameRow input:focus{ outline:none; border-color:var(--accent2); }
+  .nameRow button{ padding:10px 18px; font-size:13px; white-space:nowrap; }
+  #submitStatus{ font-size:12px; color:var(--muted); min-height:14px; }
+  .hint{
+    width:100%; max-width:800px; text-align:center; font-size:12px; letter-spacing:.5px;
+    color:var(--muted); background:rgba(255,255,255,0.03); border:1px solid var(--line);
+    border-radius:4px; padding:7px 10px;
+  }
+  .hint b{ color:var(--accent2); }
+</style>
+
+<div class="wrap">
+  <h1>SHE TURNS FOUR</h1>
+  <p class="sub">It's her birthday, and it happens in three rounds — each one a little worse than the last. Light every candle, then reach the door. She only moves when you're not watching her.</p>
+
+  <div class="hud">
+    <div>Candles: <b id="hudCandles">0/2</b></div>
+    <div>Light <span class="meter"><i id="hudBattery" style="width:100%"></i></span></div>
+    <div id="hudTime">Level 1</div>
+  </div>
+  <div class="hint"><b>WASD</b> move · <b>mouse</b> aims · hold <b>SPACE</b> for flashlight (freezes her) · stand by a candle and hold <b>E</b> to light it</div>
+
+  <div class="stage" id="stage">
+    <canvas id="c" width="800" height="600"></canvas>
+    <div id="candlePrompt">HOLD E TO LIGHT</div>
+    <div id="touchLight">HOLD<br>FOR<br>LIGHT</div>
+    <div id="touchIgnite">HOLD<br>TO<br>LIGHT</div>
+
+    <div class="overlay" id="startOverlay">
+      <img src="Messenger_creation_FD88BBDC-B500-418B-B437-A968789A55A8.jpeg" alt="the princess"/>
+      <h2>SHE TURNS FOUR TONIGHT</h2>
+      <p style="text-align:left;">
+        <b>Move</b> — WASD or arrow keys<br>
+        <b>Aim</b> — point your mouse<br>
+        <b>Flashlight</b> — hold Space (or click). While it's on her, she can't move at all — but the meter drains.<br>
+        <b>Light a candle</b> — walk up to an unlit one. When "HOLD E TO LIGHT" appears, hold <b>E</b> until it catches. Let go too soon and you start over.<br>
+        <b>Goal</b> — light every candle in the room, then walk through the glowing door.<br><br>
+        <b>Level 1 is an easy warm-up</b> — just 2 candles, she starts far away and moves slowly. It gets faster and darker from there.<br><br>
+        <span style="font-size:13px;">Touch controls: drag anywhere to move · hold the right dial for light · hold the left dial next to a candle to light it.</span>
+      </p>
+      <button id="startBtn">LIGHT THE FIRST CANDLE</button>
+      <div class="board" id="startBoardWrap">
+        <h3>TOP SURVIVORS</h3>
+        <ol id="startBoardList"><li>loading…</li></ol>
+      </div>
+    </div>
+
+    <div class="overlay" id="levelOverlay" style="display:none;">
+      <h2 id="levelTitle">LEVEL COMPLETE</h2>
+      <p id="levelText"></p>
+      <button id="continueBtn">CONTINUE</button>
+    </div>
+
+    <div class="overlay" id="endOverlay" style="display:none;">
+      <img id="endImg" src="Messenger_creation_FD88BBDC-B500-418B-B437-A968789A55A8.jpeg" alt="the princess"/>
+      <h2 id="endTitle">GAME OVER</h2>
+      <p id="endText"></p>
+      <div class="scoreLine">Score: <b id="finalScore">0</b></div>
+      <div class="nameRow">
+        <input id="nameInput" maxlength="20" placeholder="your name" autocomplete="off"/>
+        <button id="submitScoreBtn">SUBMIT</button>
+      </div>
+      <div id="submitStatus"></div>
+      <div class="board" id="endBoardWrap">
+        <h3>TOP SURVIVORS</h3>
+        <ol id="endBoardList"><li>loading…</li></ol>
+      </div>
+      <button id="retryBtn">TRY AGAIN</button>
+    </div>
+  </div>
+
+  <p class="credit">a small horror game made from a real birthday card, drawn by a real four-year-old</p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const stage = document.getElementById('stage');
+  const startOverlay = document.getElementById('startOverlay');
+  const endOverlay = document.getElementById('endOverlay');
+  const endTitle = document.getElementById('endTitle');
+  const endText = document.getElementById('endText');
+  const hudCandles = document.getElementById('hudCandles');
+  const hudBattery = document.getElementById('hudBattery');
+  const hudTime = document.getElementById('hudTime');
+  const touchLightBtn = document.getElementById('touchLight');
+  const touchIgniteBtn = document.getElementById('touchIgnite');
+  const candlePrompt = document.getElementById('candlePrompt');
+  const levelOverlay = document.getElementById('levelOverlay');
+  const levelTitle = document.getElementById('levelTitle');
+  const levelText = document.getElementById('levelText');
+  const continueBtn = document.getElementById('continueBtn');
+  const finalScoreEl = document.getElementById('finalScore');
+  const nameInput = document.getElementById('nameInput');
+  const submitScoreBtn = document.getElementById('submitScoreBtn');
+  const submitStatus = document.getElementById('submitStatus');
+  const startBoardList = document.getElementById('startBoardList');
+  const endBoardList = document.getElementById('endBoardList');
+
+  // ---------- image + sprite crop (cut out: paper removed, only ink survives) ----------
+  const img = new Image();
+  img.src = "Messenger_creation_FD88BBDC-B500-418B-B437-A968789A55A8.jpeg";
+  let spriteCanvas = document.createElement('canvas');
+  let spriteReady = false;
+  // fraction of source image containing just the figure, with margin so hands/hair are never hard-clipped
+  const CROP = { x:0.233, y:0.262, w:0.417, h:0.478 };
+  const EYE_L = {x:0.400, y:0.137}, EYE_R = {x:0.616, y:0.131}; // relative to cropped sprite
+  function cutoutSprite(sctx, w, h){
+    // never let a failed/degenerate cutout hide the whole character — worst case, keep the plain crop visible
+    let frame;
+    try { frame = sctx.getImageData(0,0,w,h); }
+    catch(e){ console.warn('cutout skipped (canvas read blocked, e.g. file:// origin):', e); return; }
+    const d = frame.data;
+    // narrow feather band + hard noise cutoff: only bold ink survives, all paper/shadow/JPEG noise goes fully transparent
+    const inkThresh = 95, whiteThresh = 185;
+    let opaqueCount = 0;
+    for (let i=0;i<d.length;i+=4){
+      const lum = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+      let a;
+      if (lum>=whiteThresh) a = 0;
+      else if (lum<=inkThresh) a = 255;
+      else a = Math.round(255*(1-(lum-inkThresh)/(whiteThresh-inkThresh)));
+      if (a < 70) a = 0; else opaqueCount++;
+      // recolor the surviving linework to a pale ghost-white — the original dark ink
+      // is invisible against the dark room, alpha alone carries the shape now
+      d[i] = 232; d[i+1] = 226; d[i+2] = 216;
+      d[i+3] = a;
+    }
+    if (opaqueCount < (w*h)*0.01){
+      console.warn('cutout skipped (near-empty result — crop/threshold mismatch), keeping original crop');
+      return;
+    }
+    sctx.putImageData(frame,0,0);
+  }
+  img.onload = function(){
+    const sx = CROP.x*img.naturalWidth, sy = CROP.y*img.naturalHeight;
+    const sw = CROP.w*img.naturalWidth, sh = CROP.h*img.naturalHeight;
+    const outW = 240, outH = Math.round(outW*sh/sw);
+    spriteCanvas.width = outW; spriteCanvas.height = outH;
+    const sctx = spriteCanvas.getContext('2d');
+    sctx.drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
+    try { cutoutSprite(sctx, outW, outH); }
+    catch(e){ console.warn('cutout failed, showing plain crop instead:', e); }
+    spriteReady = true;
+  };
+  img.onerror = function(e){ console.error('princess image failed to load:', e); };
+
+  // ---------- audio ----------
+  let ac = null, droneNodes = null, masterGain = null;
+  function initAudio(){
+    if (ac) return;
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = ac.createGain(); masterGain.gain.value = 0.5; masterGain.connect(ac.destination);
+    const o1 = ac.createOscillator(); o1.type='sine'; o1.frequency.value=54;
+    const o2 = ac.createOscillator(); o2.type='sine'; o2.frequency.value=57.5;
+    const g = ac.createGain(); g.gain.value = 0.06;
+    const lfo = ac.createOscillator(); lfo.frequency.value = 0.13;
+    const lfoGain = ac.createGain(); lfoGain.gain.value = 0.03;
+    lfo.connect(lfoGain); lfoGain.connect(g.gain);
+    o1.connect(g); o2.connect(g); g.connect(masterGain);
+    // extra dissonant layer, silent until later levels fade it in
+    const o3 = ac.createOscillator(); o3.type='sine'; o3.frequency.value=54*1.414;
+    const g3 = ac.createGain(); g3.gain.value = 0;
+    o3.connect(g3); g3.connect(masterGain);
+    o1.start(); o2.start(); lfo.start(); o3.start();
+    droneNodes = {o1,o2,g,lfo,lfoGain,o3,g3};
+  }
+  // each level gets its own drone: lower, more dissonant, more tremolo the deeper it goes
+  const AMBIENT_PARAMS = [
+    {f1:54, f2:57.5, gain:0.06, lfoRate:0.13, lfoDepth:0.03, o3Gain:0},
+    {f1:48, f2:53,   gain:0.075, lfoRate:0.19, lfoDepth:0.045, o3Gain:0.02},
+    {f1:40, f2:46,   gain:0.09, lfoRate:0.27, lfoDepth:0.06, o3Gain:0.045}
+  ];
+  function setAmbientLevel(lvl){
+    if (!ac || !droneNodes) return;
+    const p = AMBIENT_PARAMS[lvl] || AMBIENT_PARAMS[AMBIENT_PARAMS.length-1];
+    const t = ac.currentTime;
+    droneNodes.o1.frequency.setTargetAtTime(p.f1, t, 1.2);
+    droneNodes.o2.frequency.setTargetAtTime(p.f2, t, 1.2);
+    droneNodes.o3.frequency.setTargetAtTime(p.f1*1.414, t, 1.2);
+    droneNodes.g.gain.setTargetAtTime(p.gain, t, 1.5);
+    droneNodes.lfo.frequency.setTargetAtTime(p.lfoRate, t, 1.5);
+    droneNodes.lfoGain.gain.setTargetAtTime(p.lfoDepth, t, 1.5);
+    droneNodes.g3.gain.setTargetAtTime(p.o3Gain, t, 2);
+  }
+  function levelStartSting(lvl){
+    if (lvl===1){ beep(220,0.4,'sawtooth',0.15,0); }
+    else if (lvl===2){ noiseBurst(0.35,0.25); beep(130,0.7,'sawtooth',0.22,0.05); }
+  }
+  function bellToll(){
+    if (!ac) return;
+    const t0 = ac.currentTime;
+    [110,220,330].forEach((f,i)=>{
+      const o=ac.createOscillator(); o.type='sine'; o.frequency.value=f;
+      const g=ac.createGain(); g.gain.setValueAtTime(0.0001,t0);
+      g.gain.exponentialRampToValueAtTime(0.28/(i+1), t0+0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0+2.2);
+      o.connect(g); g.connect(masterGain);
+      o.start(t0); o.stop(t0+2.3);
+    });
+  }
+  function reaperWarnSound(){ bellToll(); }
+  function reaperCatchSound(){ bellToll(); noiseBurst(0.8,0.6); beep(60,1.0,'sawtooth',0.4,0.1); }
+  function beep(freq, dur, type, vol, delay){
+    if (!ac) return;
+    const t0 = ac.currentTime + (delay||0);
+    const o = ac.createOscillator(); o.type = type||'sine'; o.frequency.setValueAtTime(freq, t0);
+    const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol||0.3, t0+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    o.connect(g); g.connect(masterGain);
+    o.start(t0); o.stop(t0+dur+0.05);
+  }
+  function heartbeat(){ beep(70,0.12,'sine',0.35,0); beep(55,0.16,'sine',0.3,0.14); }
+  function chime(freq){ beep(freq,0.5,'triangle',0.25,0); }
+  function noiseBurst(dur, vol){
+    if (!ac) return;
+    const bufferSize = Math.floor(ac.sampleRate*dur);
+    const buf = ac.createBuffer(1, bufferSize, ac.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i=0;i<bufferSize;i++) data[i] = (Math.random()*2-1) * (1 - i/bufferSize);
+    const src = ac.createBufferSource(); src.buffer = buf;
+    const bp = ac.createBiquadFilter(); bp.type='bandpass'; bp.frequency.setValueAtTime(1800, ac.currentTime);
+    bp.frequency.exponentialRampToValueAtTime(200, ac.currentTime+dur);
+    const g = ac.createGain(); g.gain.value = vol||0.6;
+    src.connect(bp); bp.connect(g); g.connect(masterGain);
+    src.start();
+  }
+  function jumpscareSound(){
+    noiseBurst(0.6, 0.7);
+    beep(180,0.5,'sawtooth',0.4,0.02);
+    beep(90,0.7,'sawtooth',0.35,0.05);
+  }
+  function winSound(){ chime(392); beep(523,0.6,'triangle',0.2,0.15); beep(659,0.8,'triangle',0.18,0.3); }
+
+  // ---------- leaderboard (Supabase) ----------
+  const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co"; // <-- replace with your Supabase project URL
+  const SUPABASE_ANON_KEY = "YOUR-ANON-PUBLIC-KEY";          // <-- replace with your Supabase anon public key
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function renderBoard(listEl, rows){
+    listEl.innerHTML = '';
+    if (!rows || rows.length===0){
+      listEl.innerHTML = '<li>No scores yet — be the first.</li>';
+      return;
+    }
+    rows.forEach(r=>{
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="bn">${escapeHtml(r.name)}</span><span class="bs">${r.score}</span>`;
+      listEl.appendChild(li);
+    });
+  }
+  async function fetchTopScores(){
+    try{
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?select=name,score&order=score.desc&limit=10`, {
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+      });
+      if (!res.ok) throw new Error('bad response');
+      return await res.json();
+    } catch(e){ console.warn('leaderboard fetch failed', e); return null; }
+  }
+  async function submitScoreToBoard(name, score){
+    try{
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/scores`, {
+        method:'POST',
+        headers:{
+          apikey: SUPABASE_ANON_KEY, Authorization:`Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type':'application/json', Prefer:'return=minimal'
+        },
+        body: JSON.stringify([{ name: name.slice(0,20), score: Math.max(0,Math.min(2000,Math.round(score))) }])
+      });
+      return res.ok;
+    } catch(e){ console.warn('score submit failed', e); return false; }
+  }
+  async function refreshBoards(){
+    const rows = await fetchTopScores();
+    renderBoard(startBoardList, rows);
+    renderBoard(endBoardList, rows);
+  }
+
+  // ---------- level geometry ----------
+  // shared house layout: outer border + a few interior dividers forming rooms.
+  const walls = [
+    {x:0,y:0,w:W,h:12},{x:0,y:H-12,w:W,h:12},{x:0,y:0,w:12,h:H},{x:W-12,y:0,w:12,h:H},
+    {x:220,y:0,w:16,h:220},
+    {x:220,y:340,w:16,h:H-340},
+    {x:460,y:120,w:16,h:260},
+    {x:460,y:460,w:16,h:H-460},
+    {x:600,y:0,w:16,h:180},
+    {x:0,y:400,w:340,h:16},
+    {x:520,y:300,w:200,h:16},
+  ];
+  const ALL_CANDLES = [
+    {x:120,y:100},{x:340,y:250},{x:700,y:80},{x:120,y:520},{x:640,y:520}
+  ];
+  const doorPos = {x:W-70,y:60,w:44,h:60};
+  const playerStart = {x:120,y:H-70};
+
+  // three rounds, each harder than the last
+  const LEVELS = [
+    {
+      label:'LEVEL 1 · MORNING',
+      candles:[ALL_CANDLES[0], ALL_CANDLES[3]],
+      timeLimit:150, lightTime:0.4, lightRadius:46,
+      princessSpeed:24, princessStart:{x:700,y:500},
+      watchAngle:0.75, watchDist:620,
+      battery:20, batteryDrain:0.45, snapAfter:5.5,
+      obstacles:[],
+      intro:"Two candles, and she's still half asleep in the far room. Just get used to holding E next to a candle."
+    },
+    {
+      label:'LEVEL 2 · EVENING',
+      candles:[ALL_CANDLES[0],ALL_CANDLES[1],ALL_CANDLES[2],ALL_CANDLES[3]],
+      timeLimit:100, lightTime:0.7, lightRadius:36,
+      princessSpeed:42, princessStart:{x:60,y:60},
+      watchAngle:0.5, watchDist:480,
+      battery:11, batteryDrain:1, snapAfter:2.6,
+      obstacles:[{x:300,y:60,w:36,h:36},{x:560,y:200,w:44,h:28}],
+      intro:"She's awake now, and faster. Keep her pinned in your flashlight or she'll close the gap. Watch for furniture in the dark."
+    },
+    {
+      label:'LEVEL 3 · MIDNIGHT',
+      candles:ALL_CANDLES,
+      timeLimit:90, lightTime:0.9, lightRadius:30,
+      princessSpeed:56, princessStart:{x:60,y:60},
+      watchAngle:0.42, watchDist:430,
+      battery:9, batteryDrain:1.15, snapAfter:1.9,
+      obstacles:[{x:150,y:460,w:40,h:40},{x:600,y:440,w:50,h:34},{x:700,y:220,w:34,h:34},{x:260,y:480,w:40,h:30}],
+      reaperDelay:14, reaperSpeed:50, reaperStart:{x:W-40,y:H-40},
+      intro:"Midnight. All five candles, and she's done waiting. Something else wakes up in this room too — flashlights don't stop it. Just keep moving."
+    }
+  ];
+
+  // ---------- state ----------
+  let state = 'start'; // start | playing | jumpscare | level_complete | win_pending | lose_out | ended
+  let level = 0, totalScore = 0, currentScore = 0, scoreSubmitted = false, causeOfDeath = 'princess';
+  let player, princess, keys, mouse, flashlightOn, battery, candlesFound, midnightTimer, unwatchedTime, jumpT, lastTime, clock;
+  let touchTarget = null, touchLightHeld = false, touchIgniteHeld = false;
+  let candleLightTarget = null, candleLightProgress = 0;
+  let blockers = walls;
+  let reaper = null, reaperTimer = 0, reaperSpawned = false, reaperFlash = 0;
+
+  function resetLevel(){
+    const cfg = LEVELS[level];
+    player = {x:playerStart.x, y:playerStart.y, r:12, speed:150, angle:0};
+    princess = {x:cfg.princessStart.x, y:cfg.princessStart.y, speed:cfg.princessSpeed, angryPulse:0, walkPhase:0, watched:false};
+    mouse = {x:W/2,y:H/2};
+    flashlightOn = false;
+    battery = cfg.battery;
+    candlesFound = [];
+    midnightTimer = cfg.timeLimit;
+    unwatchedTime = 0;
+    candleLightTarget = null;
+    candleLightProgress = 0;
+    candlePrompt.style.display = 'none';
+    blockers = walls.concat(cfg.obstacles||[]);
+    reaperSpawned = false;
+    reaperFlash = 0;
+    reaper = cfg.reaperStart ? {x:cfg.reaperStart.x, y:cfg.reaperStart.y, speed:cfg.reaperSpeed, walkPhase:0} : null;
+    reaperTimer = cfg.reaperDelay || 0;
+    setAmbientLevel(level);
+    updateHud();
+  }
+  function resetGame(){
+    level = 0; totalScore = 0;
+    keys = {}; touchTarget = null; touchLightHeld = false; touchIgniteHeld = false;
+    jumpT = 0; lastTime = null; clock = 0;
+    resetLevel();
+  }
+
+  function updateHud(){
+    const cfg = LEVELS[level];
+    hudCandles.textContent = candlesFound.length + '/' + cfg.candles.length;
+    hudBattery.style.width = Math.max(0, (battery/cfg.battery*100)) + '%';
+    const secondsLeft = Math.max(0, Math.ceil(midnightTimer));
+    hudTime.textContent = cfg.label + ' — ' + secondsLeft + 's to midnight';
+  }
+
+  function rectsOverlap(a,b){
+    return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
+  }
+  function circleRectOverlap(cx,cy,cr,rect){
+    const nx = Math.max(rect.x, Math.min(cx, rect.x+rect.w));
+    const ny = Math.max(rect.y, Math.min(cy, rect.y+rect.h));
+    const dx = cx-nx, dy = cy-ny;
+    return (dx*dx+dy*dy) < cr*cr;
+  }
+
+  function tryMove(entity, dx, dy){
+    const nx = entity.x+dx;
+    let blocked=false;
+    for (const w of blockers) if (circleRectOverlap(nx, entity.y, entity.r||10, w)) { blocked=true; break; }
+    if (!blocked) entity.x = nx;
+    const ny = entity.y+dy;
+    blocked=false;
+    for (const w of blockers) if (circleRectOverlap(entity.x, ny, entity.r||10, w)) { blocked=true; break; }
+    if (!blocked) entity.y = ny;
+  }
+
+  // ---------- input ----------
+  window.addEventListener('keydown', e=>{
+    keys[e.code]=true;
+    if (e.code==='Space'){ flashlightOn = true; e.preventDefault(); }
+  });
+  window.addEventListener('keyup', e=>{
+    keys[e.code]=false;
+    if (e.code==='Space'){ flashlightOn = false; }
+  });
+  stage.addEventListener('mousemove', e=>{
+    const r = stage.getBoundingClientRect();
+    mouse.x = (e.clientX-r.left) * (W/r.width);
+    mouse.y = (e.clientY-r.top) * (H/r.height);
+  });
+  stage.addEventListener('mousedown', e=>{ if(e.target===canvas) flashlightOn = true; });
+  window.addEventListener('mouseup', ()=>{ flashlightOn = false; });
+
+  // touch: drag on canvas to move, dedicated button to hold light
+  stage.addEventListener('touchmove', e=>{
+    const t = e.touches[0]; if(!t) return;
+    const r = stage.getBoundingClientRect();
+    touchTarget = { x:(t.clientX-r.left)*(W/r.width), y:(t.clientY-r.top)*(H/r.height) };
+    mouse = touchTarget;
+    e.preventDefault();
+  }, {passive:false});
+  stage.addEventListener('touchstart', e=>{
+    const t = e.touches[0]; if(!t) return;
+    const r = stage.getBoundingClientRect();
+    touchTarget = { x:(t.clientX-r.left)*(W/r.width), y:(t.clientY-r.top)*(H/r.height) };
+  });
+  stage.addEventListener('touchend', ()=>{ touchTarget = null; });
+  touchLightBtn.addEventListener('touchstart', e=>{ touchLightHeld=true; flashlightOn=true; e.stopPropagation(); e.preventDefault();});
+  touchLightBtn.addEventListener('touchend', e=>{ touchLightHeld=false; flashlightOn=false; e.stopPropagation(); e.preventDefault();});
+  touchIgniteBtn.addEventListener('touchstart', e=>{ touchIgniteHeld=true; e.stopPropagation(); e.preventDefault();});
+  touchIgniteBtn.addEventListener('touchend', e=>{ touchIgniteHeld=false; e.stopPropagation(); e.preventDefault();});
+
+  // ---------- game flow ----------
+  document.getElementById('startBtn').addEventListener('click', ()=>{
+    initAudio();
+    resetGame();
+    startOverlay.style.display='none';
+    endOverlay.style.display='none';
+    state='playing';
+    requestAnimationFrame(loop);
+  });
+  document.getElementById('retryBtn').addEventListener('click', ()=>{
+    resetGame();
+    endOverlay.style.display='none';
+    state='playing';
+    requestAnimationFrame(loop);
+  });
+  continueBtn.addEventListener('click', ()=>{
+    level++;
+    resetLevel();
+    levelStartSting(level);
+    levelOverlay.style.display='none';
+    state='playing';
+  });
+  submitScoreBtn.addEventListener('click', async ()=>{
+    if (scoreSubmitted) return;
+    const name = (nameInput.value||'').trim().slice(0,20) || 'Anonymous';
+    localStorage.setItem('sheTurnsFourName', name);
+    submitScoreBtn.disabled = true;
+    submitStatus.textContent = 'Saving…';
+    const ok = await submitScoreToBoard(name, currentScore);
+    if (ok){
+      submitStatus.textContent = 'Saved to the leaderboard.';
+      scoreSubmitted = true;
+      await refreshBoards();
+    } else {
+      submitStatus.textContent = 'Could not save — check your connection.';
+      submitScoreBtn.disabled = false;
+    }
+  });
+
+  function triggerLose(cause){
+    causeOfDeath = cause;
+    totalScore += candlesFound.length*150; // partial credit for the round in progress
+    state='jumpscare'; jumpT=0;
+    if (cause==='reaper') reaperCatchSound(); else jumpscareSound();
+  }
+  function triggerLevelComplete(){
+    state='level_complete';
+    chime(784);
+    const next = LEVELS[level+1];
+    levelTitle.textContent = 'LEVEL ' + (level+1) + ' COMPLETE';
+    levelText.textContent = next.intro;
+    levelOverlay.style.display='flex';
+  }
+  function triggerWin(){
+    state='win_pending'; jumpT=0;
+    winSound();
+  }
+
+  function showEnd(won){
+    endOverlay.style.display='flex';
+    currentScore = totalScore;
+    finalScoreEl.textContent = totalScore;
+    if (won){
+      endTitle.textContent = 'YOU ESCAPED';
+      endText.textContent = 'You made it out before midnight, all three rounds done. Somewhere behind you, something is still humming happy birthday to itself.';
+    } else {
+      endTitle.textContent = 'GAME OVER';
+      if (causeOfDeath==='reaper'){
+        endText.textContent = "He found you. No flashlight trick stops Death. You reached " + LEVELS[level].label + ".";
+      } else if (causeOfDeath==='timeout'){
+        endText.textContent = "Midnight came and went before the last candle caught. You reached " + LEVELS[level].label + ".";
+      } else {
+        endText.textContent = 'She just wanted to show you her balloon. You reached ' + LEVELS[level].label + '.';
+      }
+    }
+    nameInput.value = localStorage.getItem('sheTurnsFourName') || '';
+    submitStatus.textContent = '';
+    scoreSubmitted = false;
+    submitScoreBtn.disabled = false;
+    refreshBoards();
+  }
+
+  // ---------- update ----------
+  function update(dt){
+    if (state !== 'playing') return;
+    const cfg = LEVELS[level];
+
+    clock += dt;
+    if (reaperFlash>0) reaperFlash = Math.max(0, reaperFlash-dt*1.6);
+    midnightTimer -= dt;
+    if (midnightTimer <= 0){
+      causeOfDeath = 'timeout';
+      totalScore += candlesFound.length*150;
+      state='lose_out'; jumpscareSound(); return;
+    }
+
+    // movement
+    let dx=0, dy=0;
+    if (keys['KeyW']||keys['ArrowUp']) dy-=1;
+    if (keys['KeyS']||keys['ArrowDown']) dy+=1;
+    if (keys['KeyA']||keys['ArrowLeft']) dx-=1;
+    if (keys['KeyD']||keys['ArrowRight']) dx+=1;
+    if (touchTarget){
+      const ddx = touchTarget.x-player.x, ddy = touchTarget.y-player.y;
+      const d = Math.hypot(ddx,ddy);
+      if (d>6){ dx = ddx/d; dy = ddy/d; }
+    }
+    const len = Math.hypot(dx,dy);
+    if (len>0){ dx/=len; dy/=len; tryMove(player, dx*player.speed*dt, dy*player.speed*dt); }
+
+    player.angle = Math.atan2(mouse.y-player.y, mouse.x-player.x);
+
+    // flashlight battery
+    if (flashlightOn && battery>0){
+      battery = Math.max(0, battery-dt*cfg.batteryDrain);
+      if (battery<=0) flashlightOn=false;
+    } else if (!flashlightOn && battery<cfg.battery){
+      battery = Math.min(cfg.battery, battery+dt*cfg.batteryDrain*0.6);
+    }
+
+    // is princess illuminated?
+    const toPx = princess.x-player.x, toPy = princess.y-player.y;
+    const dist = Math.hypot(toPx,toPy);
+    const angleTo = Math.atan2(toPy,toPx);
+    let angleDiff = Math.atan2(Math.sin(angleTo-player.angle), Math.cos(angleTo-player.angle));
+    const watched = flashlightOn && Math.abs(angleDiff) < cfg.watchAngle && dist < cfg.watchDist;
+    princess.watched = watched;
+
+    if (watched){
+      unwatchedTime = 0;
+      princess.angryPulse = Math.max(0, princess.angryPulse-dt*2);
+    } else {
+      unwatchedTime += dt;
+      princess.angryPulse = Math.min(1, princess.angryPulse+dt*0.4);
+      const speed = princess.speed * (1 + Math.min(1.6, unwatchedTime*0.12));
+      const ang = Math.atan2(player.y-princess.y, player.x-princess.x);
+      princess.x += Math.cos(ang)*speed*dt;
+      princess.y += Math.sin(ang)*speed*dt;
+      princess.walkPhase += dt*(6+speed*0.05);
+      // snap-closer when ignored too long (weeping-angel style)
+      if (unwatchedTime > cfg.snapAfter){
+        princess.x += Math.cos(ang)*speed*dt*3;
+        princess.y += Math.sin(ang)*speed*dt*3;
+      }
+    }
+
+    if (dist < 220 && !watched && Math.random()<dt*0.6) heartbeat();
+
+    if (dist < 26){ triggerLose('princess'); return; }
+
+    // the reaper: level 3 only, arrives after a countdown, cannot be stopped by light
+    if (reaper){
+      if (!reaperSpawned){
+        reaperTimer -= dt;
+        if (reaperTimer <= 0){
+          reaperSpawned = true;
+          reaperFlash = 0.4;
+          reaperWarnSound();
+        }
+      } else {
+        const rang = Math.atan2(player.y-reaper.y, player.x-reaper.x);
+        tryMove(reaper, Math.cos(rang)*reaper.speed*dt, Math.sin(rang)*reaper.speed*dt);
+        reaper.walkPhase += dt*4;
+        const rdist = Math.hypot(player.x-reaper.x, player.y-reaper.y);
+        if (rdist < 220 && Math.random()<dt*0.9) heartbeat();
+        if (rdist < 24){ triggerLose('reaper'); return; }
+      }
+    }
+
+    // candles: hold E (or the touch dial) next to an unlit one to light it
+    let nearCandle = null, nearDist = cfg.lightRadius;
+    for (const c of cfg.candles){
+      if (candlesFound.includes(c)) continue;
+      const d2 = Math.hypot(player.x-c.x, player.y-c.y);
+      if (d2 < nearDist){ nearCandle = c; nearDist = d2; }
+    }
+    const lightHeld = !!keys['KeyE'] || touchIgniteHeld;
+    if (nearCandle){
+      if (lightHeld){
+        if (candleLightTarget !== nearCandle){ candleLightTarget = nearCandle; candleLightProgress = 0; }
+        candleLightProgress += dt;
+        if (candleLightProgress >= cfg.lightTime){
+          candlesFound.push(nearCandle);
+          chime(660+candlesFound.length*40);
+          candleLightTarget = null; candleLightProgress = 0;
+        }
+        candlePrompt.style.display = 'block';
+        candlePrompt.textContent = 'LIGHTING...';
+      } else {
+        candleLightTarget = null; candleLightProgress = 0;
+        candlePrompt.style.display = 'block';
+        candlePrompt.textContent = 'HOLD E TO LIGHT';
+      }
+    } else {
+      candleLightTarget = null; candleLightProgress = 0;
+      candlePrompt.style.display = 'none';
+    }
+
+    // door
+    if (candlesFound.length===cfg.candles.length && circleRectOverlap(player.x,player.y,player.r,doorPos)){
+      const timeBonus = Math.round(midnightTimer*3);
+      totalScore += candlesFound.length*150 + timeBonus;
+      if (level < LEVELS.length-1) triggerLevelComplete(); else triggerWin();
+    }
+
+    updateHud();
+  }
+
+  // ---------- draw ----------
+  function drawWalls(){
+    ctx.fillStyle = '#241a17';
+    for (const w of walls) ctx.fillRect(w.x,w.y,w.w,w.h);
+    ctx.strokeStyle = '#3a2a26';
+    for (const w of walls) ctx.strokeRect(w.x,w.y,w.w,w.h);
+  }
+  function drawObstacles(list){
+    for (const o of list){
+      ctx.fillStyle = '#3d2b1f';
+      ctx.fillRect(o.x,o.y,o.w,o.h);
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      ctx.fillRect(o.x,o.y,o.w,3);
+      ctx.strokeStyle = '#6b4a30';
+      ctx.strokeRect(o.x,o.y,o.w,o.h);
+    }
+  }
+  function drawFloor(){
+    ctx.fillStyle = '#0f0b0a';
+    ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle = 'rgba(60,45,40,0.25)';
+    for (let x=0;x<W;x+=40){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+    for (let y=0;y<H;y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+  }
+  function drawCandle(c, lit){
+    ctx.save(); ctx.translate(c.x,c.y);
+    ctx.fillStyle = '#d8cbb8'; ctx.fillRect(-3,-2,6,14);
+    if (!lit){
+      const flick = 0.6+Math.random()*0.4;
+      ctx.fillStyle = `rgba(255,${140+Math.floor(60*flick)},60,${0.8*flick})`;
+      ctx.beginPath(); ctx.ellipse(0,-10,4,7*flick,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='rgba(255,220,150,0.5)';
+      ctx.beginPath(); ctx.arc(0,-8,14*flick,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawCandleProgress(){
+    if (!candleLightTarget || candleLightProgress<=0) return;
+    const c = candleLightTarget;
+    const frac = Math.min(1, candleLightProgress/LEVELS[level].lightTime);
+    ctx.save();
+    ctx.translate(c.x, c.y-22);
+    ctx.strokeStyle = 'rgba(60,40,30,0.6)'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI*2); ctx.stroke();
+    ctx.strokeStyle = '#ffb703'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.arc(0,0,10,-Math.PI/2,-Math.PI/2+frac*Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+  function drawDoor(active){
+    ctx.fillStyle = active ? '#ffb703' : '#3a2a26';
+    ctx.fillRect(doorPos.x,doorPos.y,doorPos.w,doorPos.h);
+    if (active){
+      ctx.shadowColor='#ffb703'; ctx.shadowBlur=20;
+      ctx.strokeStyle='#fff5da'; ctx.strokeRect(doorPos.x,doorPos.y,doorPos.w,doorPos.h);
+      ctx.shadowBlur=0;
+    }
+  }
+  function drawPlayer(){
+    ctx.save();
+    ctx.translate(player.x, player.y);
+    ctx.fillStyle = '#e8dcd0';
+    ctx.beginPath(); ctx.arc(0,0,player.r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawPrincess(){
+    if (!spriteReady) return;
+    const w = 70, h = w*spriteCanvas.height/spriteCanvas.width;
+    // she's a paper-doll cutout: bobs and sways while creeping, holds dead still while watched
+    const bob = princess.watched ? Math.sin(clock*1.3)*1.2 : Math.sin(princess.walkPhase)*4;
+    const tilt = princess.watched ? 0 : Math.sin(princess.walkPhase*0.5)*0.08;
+    const jitter = princess.angryPulse*4;
+    const jx = (Math.random()-0.5)*jitter, jy=(Math.random()-0.5)*jitter;
+
+    ctx.save();
+    ctx.translate(princess.x+jx, princess.y - bob + jy);
+    ctx.rotate(tilt);
+    // soft ghostly glow so pale linework still pops against the dark room
+    ctx.shadowColor = princess.angryPulse>0.2 ? 'rgba(255,40,40,0.85)' : 'rgba(255,245,230,0.7)';
+    ctx.shadowBlur = 10;
+    ctx.drawImage(spriteCanvas, -w/2, -h, w, h);
+    ctx.shadowBlur = 0;
+
+    if (princess.angryPulse>0.05){
+      // bleeding-ink tint, masked to the drawn linework only
+      ctx.globalCompositeOperation = 'source-atop';
+      ctx.fillStyle = `rgba(190,10,10,${Math.min(0.55, princess.angryPulse*0.5)})`;
+      ctx.fillRect(-w/2,-h,w,h);
+      ctx.globalCompositeOperation = 'source-over';
+      // glowing eyes
+      const ex1 = -w/2 + EYE_L.x*w, ey1 = -h + EYE_L.y*h;
+      const ex2 = -w/2 + EYE_R.x*w, ey2 = -h + EYE_R.y*h;
+      const glow = 2 + princess.angryPulse*3;
+      ctx.fillStyle = `rgba(255,20,20,${0.5+princess.angryPulse*0.5})`;
+      ctx.shadowColor='#ff2d2d'; ctx.shadowBlur = 8+princess.angryPulse*10;
+      ctx.beginPath(); ctx.arc(ex1,ey1,glow,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(ex2,ey2,glow,0,Math.PI*2); ctx.fill();
+      ctx.shadowBlur=0;
+    }
+    ctx.restore();
+  }
+  function drawReaperShape(scale, sway){
+    ctx.save();
+    ctx.scale(scale, scale);
+    ctx.rotate(sway||0);
+    ctx.fillStyle = '#0a0a0d';
+    ctx.beginPath();
+    ctx.moveTo(0,-38);
+    ctx.quadraticCurveTo(17,-30,15,0);
+    ctx.lineTo(21,27);
+    ctx.lineTo(-21,27);
+    ctx.lineTo(-15,0);
+    ctx.quadraticCurveTo(-17,-30,0,-38);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#000'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(0,-14,9,11,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,238,180,0.95)';
+    ctx.shadowColor = '#fff3b0'; ctx.shadowBlur = 9;
+    ctx.beginPath(); ctx.arc(-4,-15,1.7,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(4,-15,1.7,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.strokeStyle = '#555'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(21,20); ctx.lineTo(36,-32); ctx.stroke();
+    ctx.strokeStyle = '#ddd'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.arc(36,-16,17,Math.PI*1.05,Math.PI*1.85); ctx.stroke();
+    ctx.restore();
+  }
+  function drawReaper(){
+    if (!reaper || !reaperSpawned) return;
+    const sway = Math.sin(reaper.walkPhase)*0.05;
+    ctx.save();
+    ctx.translate(reaper.x, reaper.y);
+    drawReaperShape(1, sway);
+    ctx.restore();
+  }
+  function drawVisionMask(){
+    ctx.save();
+    ctx.fillStyle = 'rgba(4,2,2,0.93)';
+    ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation='destination-out';
+    let g = ctx.createRadialGradient(player.x,player.y,4,player.x,player.y,70);
+    g.addColorStop(0,'rgba(0,0,0,1)'); g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(player.x,player.y,70,0,Math.PI*2); ctx.fill();
+    if (flashlightOn && battery>0){
+      ctx.save();
+      ctx.translate(player.x,player.y); ctx.rotate(player.angle);
+      const len=480, spread=0.5;
+      let cg = ctx.createRadialGradient(0,0,10,0,0,len);
+      cg.addColorStop(0,'rgba(0,0,0,1)'); cg.addColorStop(0.7,'rgba(0,0,0,0.9)'); cg.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=cg;
+      ctx.beginPath(); ctx.moveTo(0,0);
+      ctx.arc(0,0,len,-spread,spread); ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+    ctx.globalCompositeOperation='source-over';
+    ctx.restore();
+  }
+
+  function drawStatic(amount){
+    ctx.save();
+    ctx.globalAlpha = amount;
+    for (let i=0;i<26;i++){
+      ctx.fillStyle = Math.random()<0.5 ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)';
+      ctx.fillRect(Math.random()*W, Math.random()*H, Math.random()*90+10, Math.random()*2.5+1);
+    }
+    ctx.restore();
+  }
+  function drawDangerVignette(pulse){
+    ctx.save();
+    const g = ctx.createRadialGradient(W/2,H/2,H*0.28,W/2,H/2,H*0.75);
+    g.addColorStop(0,'rgba(150,0,0,0)');
+    g.addColorStop(1,`rgba(150,0,0,${0.35*pulse})`);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  }
+
+  function draw(){
+    const cfg = LEVELS[level];
+    drawFloor();
+    drawWalls();
+    drawObstacles(cfg.obstacles||[]);
+    for (const c of cfg.candles) drawCandle(c, candlesFound.includes(c));
+    drawCandleProgress();
+    drawDoor(candlesFound.length===cfg.candles.length);
+    drawPrincess();
+    drawReaper();
+    drawPlayer();
+    if (state==='playing') drawVisionMask();
+
+    if (state==='playing'){
+      // rising dread: danger red vignette when something is closing in
+      let threat = 0;
+      if (princess && !princess.watched){
+        const pd = Math.hypot(player.x-princess.x, player.y-princess.y);
+        threat = Math.max(threat, Math.max(0, 1 - pd/300) * (0.4+princess.angryPulse*0.6));
+      }
+      if (reaper && reaperSpawned){
+        const rd = Math.hypot(player.x-reaper.x, player.y-reaper.y);
+        threat = Math.max(threat, Math.max(0, 1 - rd/260));
+      }
+      if (threat>0.02){
+        const pulse = threat * (0.6+0.4*Math.sin(clock*9));
+        drawDangerVignette(pulse);
+      }
+      if (reaperFlash>0){
+        ctx.save();
+        ctx.fillStyle = `rgba(255,255,255,${(reaperFlash/0.4)*0.8})`;
+        ctx.fillRect(0,0,W,H);
+        ctx.restore();
+      }
+      // level-scaled glitch flicker
+      const glitchChance = [0.0015, 0.004, 0.008][level] || 0.008;
+      if (Math.random() < glitchChance) drawStatic(0.12+Math.random()*0.1);
+      // countdown warning before the reaper wakes, level 3 only
+      if (reaper && !reaperSpawned && reaperTimer < 5){
+        ctx.save();
+        ctx.font = "16px 'Creepster', cursive";
+        ctx.textAlign = 'center';
+        ctx.fillStyle = `rgba(255,45,45,${0.4+0.4*Math.sin(clock*6)})`;
+        ctx.fillText('SOMETHING IS COMING', W/2, 34);
+        ctx.restore();
+      }
+    }
+
+    if (state==='jumpscare' || state==='win_pending'){
+      // fullscreen closeup with shake / flash
+      const t = jumpT;
+      const shakeX = (Math.random()-0.5)* (state==='jumpscare'? 26:6);
+      const shakeY = (Math.random()-0.5)* (state==='jumpscare'? 26:6);
+      ctx.save();
+      ctx.translate(shakeX,shakeY);
+      if (state==='jumpscare'){
+        ctx.fillStyle = t<0.15 ? '#ff2d2d' : '#050202';
+        ctx.fillRect(-30,-30,W+60,H+60);
+        if (causeOfDeath==='reaper'){
+          const scale = 1.6 + Math.min(2.4, t*3);
+          ctx.save();
+          ctx.translate(W/2, H/2-20);
+          drawReaperShape(scale, 0);
+          ctx.restore();
+        } else if (spriteReady){
+          const scale = 1.4 + Math.min(2.2, t*3);
+          const w = spriteCanvas.width*0.5*scale, h = spriteCanvas.height*0.5*scale;
+          ctx.drawImage(spriteCanvas, W/2-w/2, H/2-h/2-40, w, h);
+          if (t>0.1){
+            const ex1 = W/2-w/2+EYE_L.x*w, ey1=H/2-h/2-40+EYE_L.y*h;
+            const ex2 = W/2-w/2+EYE_R.x*w, ey2=H/2-h/2-40+EYE_R.y*h;
+            ctx.fillStyle='rgba(255,0,0,0.9)'; ctx.shadowColor='#f00'; ctx.shadowBlur=25;
+            ctx.beginPath(); ctx.arc(ex1,ey1,7,0,Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(ex2,ey2,7,0,Math.PI*2); ctx.fill();
+            ctx.shadowBlur=0;
+          }
+        }
+        drawStatic(0.18);
+      } else {
+        ctx.fillStyle='rgba(255,220,150,0.15)'; ctx.fillRect(-30,-30,W+60,H+60);
+      }
+      ctx.restore();
+    }
+  }
+
+  function loop(ts){
+    if (lastTime===null) lastTime = ts;
+    const dt = Math.min(0.05, (ts-lastTime)/1000);
+    lastTime = ts;
+
+    if (state==='playing') update(dt);
+    if (state==='jumpscare'){
+      jumpT += dt;
+      if (jumpT>1.1){ state='ended'; showEnd(false); }
+    }
+    if (state==='win_pending'){
+      jumpT += dt;
+      if (jumpT>1.0){ state='ended'; showEnd(true); }
+    }
+    if (state==='lose_out'){
+      jumpT += dt;
+      if (jumpT>0){ state='jumpscare'; jumpT=0; }
+    }
+    draw();
+    if (state!=='ended') requestAnimationFrame(loop);
+  }
+
+  // idle preview render before start
+  function idleDraw(){
+    if (state==='start'){
+      drawFloor(); drawWalls();
+      for (const c of LEVELS[0].candles) drawCandle(c,false);
+      drawDoor(false);
+      if (spriteReady){ princess.x=400; princess.y=300; drawPrincess(); }
+      requestAnimationFrame(idleDraw);
+    }
+  }
+  resetGame();
+  idleDraw();
+})();
+</script>
