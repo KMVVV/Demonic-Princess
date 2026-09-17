@@ -715,21 +715,28 @@
     ctx.save(); ctx.translate(c.x,c.y);
     ctx.fillStyle = '#d8cbb8'; ctx.fillRect(-3,-2,6,14);
     if (lit){
-      // fully lit: big bold flame with a strong multi-layer halo that lights up the room around it
+      // fully lit: room-lighting halo behind an actual animated flame shape
       const flick = 0.92+Math.random()*0.08;
+      const sway = Math.sin(clock*6.5 + c.x*0.3 + c.y*0.2)*2.2;
       ctx.fillStyle = 'rgba(255,215,140,0.4)';
       ctx.beginPath(); ctx.arc(0,-9,70*flick,0,Math.PI*2); ctx.fill();
       ctx.fillStyle = 'rgba(255,200,110,0.6)';
       ctx.beginPath(); ctx.arc(0,-9,40*flick,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle = 'rgba(255,190,90,0.85)';
-      ctx.beginPath(); ctx.arc(0,-9,20*flick,0,Math.PI*2); ctx.fill();
-      ctx.shadowColor = '#ffcf7a'; ctx.shadowBlur = 28;
-      ctx.fillStyle = `rgba(255,140,40,${flick})`;
-      ctx.beginPath(); ctx.ellipse(0,-13,7,13*flick,0,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle = `rgba(255,225,150,${flick})`;
-      ctx.beginPath(); ctx.ellipse(0,-13,4.5,9*flick,0,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#fffdf2';
-      ctx.beginPath(); ctx.ellipse(0,-12,2.2,5*flick,0,0,Math.PI*2); ctx.fill();
+      ctx.shadowColor = '#ffcf7a'; ctx.shadowBlur = 24;
+      // a real teardrop flame shape, layered outer-orange -> inner blue-white, with a gentle flicker sway
+      function flameLayer(halfWidth, height, yTip, color){
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.quadraticCurveTo(-halfWidth,-height*0.45, sway*(height/22), -height*flick+yTip);
+        ctx.quadraticCurveTo(halfWidth,-height*0.45, 0,0);
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+      }
+      flameLayer(7.5, 22, 0, 'rgba(255,120,20,0.95)');
+      flameLayer(5.5, 16, -2, 'rgba(255,180,55,0.95)');
+      flameLayer(3.5, 10, -3, 'rgba(255,230,140,0.95)');
+      flameLayer(1.8, 6, -4, 'rgba(210,235,255,0.95)');
       ctx.shadowBlur = 0;
     } else {
       // not yet lit: a soft pale pre-glow so it's easy to spot from a distance, clearly not burning yet
@@ -778,31 +785,33 @@
     ctx.translate(princess.x+jx, princess.y - bob + jy);
     ctx.rotate(tilt);
 
-    // constant bright aura so she reads as a glowing presence even before the linework resolves
-    const auraColor = princess.angryPulse>0.2 ? 'rgba(255,80,80,0.85)' : 'rgba(255,253,240,0.8)';
+    // constant bright white aura so she reads as a glowing presence even before the linework resolves
+    // (stays white almost all the way — only the faintest warm edge at extreme anger, not a red wash)
+    const veryAngry = princess.angryPulse>0.7;
     let aura = ctx.createRadialGradient(0,-h*0.55,2,0,-h*0.55,w*1.6);
-    aura.addColorStop(0, auraColor);
-    aura.addColorStop(0.5, princess.angryPulse>0.2 ? 'rgba(255,80,80,0.35)' : 'rgba(255,253,240,0.35)');
+    aura.addColorStop(0, veryAngry ? 'rgba(255,150,140,0.85)' : 'rgba(255,253,240,0.8)');
+    aura.addColorStop(0.5, veryAngry ? 'rgba(255,150,140,0.35)' : 'rgba(255,253,240,0.35)');
     aura.addColorStop(1, 'rgba(255,252,235,0)');
     ctx.fillStyle = aura;
     ctx.beginPath(); ctx.arc(0,-h*0.55,w*1.6,0,Math.PI*2); ctx.fill();
 
-    // bright ghostly glow so the linework pops hard against the dark room
-    ctx.shadowColor = princess.angryPulse>0.2 ? 'rgba(255,50,50,1)' : 'rgba(255,250,235,1)';
-    ctx.shadowBlur = 36;
+    // crisp bright white outline — kept tight (less blur) so the linework itself stays sharp and clear
+    ctx.shadowColor = 'rgba(255,252,240,1)';
+    ctx.shadowBlur = 18;
     // thicken the thin cutout linework with offset passes so it's bold, not faint
-    ctx.globalAlpha = 0.65;
+    ctx.globalAlpha = 0.7;
     const offs = [[-1.6,0],[1.6,0],[0,-1.6],[0,1.6],[-1.2,-1.2],[1.2,-1.2],[-1.2,1.2],[1.2,1.2]];
     for (const [ox,oy] of offs) ctx.drawImage(spriteCanvas, -w/2+ox, -h+oy, w, h);
     ctx.globalAlpha = 1;
+    ctx.shadowBlur = 6;
     ctx.drawImage(spriteCanvas, -w/2, -h, w, h);
     ctx.drawImage(spriteCanvas, -w/2, -h, w, h);
     ctx.shadowBlur = 0;
 
-    if (princess.angryPulse>0.05){
-      // bleeding-ink tint, masked to the drawn linework only
+    if (princess.angryPulse>0.35){
+      // faint bleeding-ink tint, masked to the drawn linework only — a hint of red, not a wash
       ctx.globalCompositeOperation = 'source-atop';
-      ctx.fillStyle = `rgba(190,10,10,${Math.min(0.55, princess.angryPulse*0.5)})`;
+      ctx.fillStyle = `rgba(200,20,20,${Math.min(0.25, (princess.angryPulse-0.35)*0.35)})`;
       ctx.fillRect(-w/2,-h,w,h);
       ctx.globalCompositeOperation = 'source-over';
       // glowing eyes
