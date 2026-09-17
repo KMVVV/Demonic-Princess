@@ -38,6 +38,7 @@
   .overlay p{ color:var(--muted); max-width:460px; font-size:14.5px; line-height:1.65; margin:0;}
   .instrCompact{ display:none; }
   .walkStrip{ width:min(92%,380px); height:auto; aspect-ratio:10/7; flex-shrink:0; margin:-2px 0 2px; }
+  .flameStrip{ width:min(92%,400px); height:auto; aspect-ratio:400/46; flex-shrink:0; margin-top:-4px; }
   button{
     font-family:'Crimson Text',Georgia,serif; font-size:15px; letter-spacing:2px; padding:12px 26px; border-radius:4px;
     border:1px solid var(--accent); background:transparent; color:var(--ink); cursor:pointer;
@@ -138,6 +139,7 @@
     .instrCompact{ display:block; font-size:11.5px; line-height:1.45; color:var(--muted); max-width:320px; }
     .overlay h2{ font-size:18px; margin:0; }
     .walkStrip{ width:min(70%,220px); }
+    .flameStrip{ width:min(60%,180px); }
     .overlay p{ font-size:12px; line-height:1.5; }
     button{ padding:8px 16px; font-size:12.5px; }
     #startBoardWrap{ display:none; }
@@ -177,18 +179,19 @@
         <b>Flashlight</b> — hold Space (or click). While it's on her, she can't move at all — but the meter drains.<br>
         <b>Light a candle</b> — just walk into an unlit one. It catches instantly, no waiting.<br>
         <b>Goal</b> — light every candle in the room, then walk through the glowing door.<br>
-        <b>Past level 3</b> — she starts throwing cake, and later a burning cable. Neither can kill you outright, but a hit stuns you and burns your battery, so dodge them.<br><br>
+        <b>Past level 3</b> — she starts throwing cake, and later a burning candle. Neither can kill you outright, but a hit stuns you and burns your battery, so dodge them.<br><br>
         <b>Level 1 is an easy warm-up</b> — just 2 candles, she starts far away and moves slowly. It gets faster and darker from there.<br><br>
         <span style="font-size:13px;">On a phone: use the arrow buttons in the bottom-left to move. The dial in the bottom-right is your flashlight — hold and drag it to aim in any direction; let go to switch it off. Don't touch the dial and it just points the way you're walking.</span>
       </p>
       <p class="instrCompact">
-        <b>WASD/arrows</b> move · <b>mouse</b> aim · <b>Space</b> = flashlight (freezes her) · walk into candles to light them · dodge cake/cable past level 3
+        <b>WASD/arrows</b> move · <b>mouse</b> aim · <b>Space</b> = flashlight (freezes her) · walk into candles to light them · dodge cake/candle past level 3
       </p>
       <button id="startBtn">LIGHT THE FIRST CANDLE</button>
       <div class="board" id="startBoardWrap">
         <h3>TOP SURVIVORS</h3>
         <ol id="startBoardList"><li>loading…</li></ol>
       </div>
+      <canvas id="flameStrip" class="flameStrip" width="400" height="46"></canvas>
     </div>
 
     <div class="overlay" id="levelOverlay" style="display:none;">
@@ -247,6 +250,8 @@
   const wctx = walkCanvas.getContext('2d');
   const danceCanvas = document.getElementById('danceCanvas');
   const dctx = danceCanvas.getContext('2d');
+  const flameStripCanvas = document.getElementById('flameStrip');
+  const fsctx = flameStripCanvas.getContext('2d');
   const endOverlay = document.getElementById('endOverlay');
   const endTitle = document.getElementById('endTitle');
   const endText = document.getElementById('endText');
@@ -421,8 +426,8 @@
   function winSound(){ chime(392); beep(523,0.6,'triangle',0.2,0.15); beep(659,0.8,'triangle',0.18,0.3); }
   function cakeThrowSound(){ beep(240,0.12,'square',0.18,0); }
   function cakeHitSound(){ noiseBurst(0.25,0.35); beep(140,0.2,'square',0.2,0); beep(90,0.3,'sawtooth',0.15,0.05); }
-  function cableThrowSound(){ noiseBurst(0.15,0.2); beep(180,0.15,'sawtooth',0.2,0); }
-  function cableHitSound(){ noiseBurst(0.5,0.5); beep(90,0.35,'sawtooth',0.3,0); beep(50,0.5,'sawtooth',0.25,0.08); }
+  function candleThrowSound(){ noiseBurst(0.15,0.2); beep(180,0.15,'sawtooth',0.2,0); }
+  function candleHitSound(){ noiseBurst(0.5,0.5); beep(90,0.35,'sawtooth',0.3,0); beep(50,0.5,'sawtooth',0.25,0.08); }
 
   // ---------- leaderboard (Supabase) ----------
   const SUPABASE_URL = "https://xojzhrffvjcfkihgpemw.supabase.co";
@@ -482,7 +487,7 @@
   const playerStart = {x:W-70,y:120};
 
   // ten rounds, each harder than the last. Past level 3 something else wakes up (the reaper);
-  // level 4 onward she also starts throwing cake, and level 8 onward a burning cable joins it —
+  // level 4 onward she also starts throwing cake, and level 8 onward a burning candle joins it —
   // neither can kill you outright, but a hit stuns you and tears a chunk out of your battery.
   const LEVELS = [
     {
@@ -574,7 +579,7 @@
       obstacles:[{x:180,y:560,w:34,h:34},{x:470,y:200,w:36,h:36},{x:300,y:400,w:36,h:36},{x:470,y:680,w:34,h:34},{x:350,y:150,w:34,h:34},{x:150,y:450,w:36,h:36},{x:400,y:550,w:34,h:34}],
       reaperDelay:5, reaperSpeed:82, reaperStart:{x:W-40,y:H-40},
       cakeEnabled:true, cakeInterval:4.5, cakeSpeed:260, cakeColor:'#ff8c3a',
-      cableEnabled:true, cableInterval:9, cableSpeed:250,
+      candleThrowEnabled:true, candleThrowInterval:9, candleThrowSpeed:250,
       intro:"You can hear it in the walls now. He's close, she's closer, and your light barely reaches past your own hand. And now she's found something on fire to throw."
     },
     {
@@ -587,8 +592,8 @@
       obstacles:[{x:180,y:560,w:34,h:34},{x:470,y:200,w:36,h:36},{x:300,y:400,w:36,h:36},{x:470,y:680,w:34,h:34},{x:350,y:150,w:34,h:34},{x:150,y:450,w:36,h:36},{x:400,y:550,w:34,h:34},{x:250,y:650,w:36,h:36}],
       reaperDelay:4.5, reaperSpeed:86, reaperStart:{x:W-40,y:H-40},
       cakeEnabled:true, cakeInterval:4, cakeSpeed:275, cakeColor:'#3a4fae',
-      cableEnabled:true, cableInterval:8, cableSpeed:265,
-      intro:"One more after this. If you're still standing, you've earned it. Mind the burning cable — a hit costs you far more than the cake does."
+      candleThrowEnabled:true, candleThrowInterval:8, candleThrowSpeed:265,
+      intro:"One more after this. If you're still standing, you've earned it. Mind the burning candle — a hit costs you far more than the cake does."
     },
     {
       label:'LEVEL 10 · THE LAST CANDLE',
@@ -600,7 +605,7 @@
       obstacles:[{x:180,y:560,w:34,h:34},{x:470,y:200,w:36,h:36},{x:300,y:400,w:36,h:36},{x:470,y:680,w:34,h:34},{x:350,y:150,w:34,h:34},{x:150,y:450,w:36,h:36},{x:400,y:550,w:34,h:34},{x:250,y:650,w:36,h:36},{x:520,y:400,w:34,h:34}],
       reaperDelay:4, reaperSpeed:90, reaperStart:{x:W-40,y:H-40},
       cakeEnabled:true, cakeInterval:3.5, cakeSpeed:290, cakeColor:'#8b0000',
-      cableEnabled:true, cableInterval:7, cableSpeed:280,
+      candleThrowEnabled:true, candleThrowInterval:7, candleThrowSpeed:280,
       intro:"This is the last one. Almost no time, almost no light, and neither of them is waiting anymore."
     }
   ];
@@ -616,7 +621,7 @@
   let reaper = null, reaperTimer = 0, reaperSpawned = false, reaperFlash = 0;
   const THROW_ANIM_DUR = 0.4; // how long her throw-lunge pose plays, in seconds
   let cakes = [], cakeCooldown = 0, playerStunT = 0, cakeHitFlash = 0;
-  let cables = [], cableCooldown = 0;
+  let thrownCandles = [], candleThrowCooldown = 0;
 
   function resetLevel(){
     const cfg = LEVELS[level];
@@ -635,8 +640,8 @@
     reaperTimer = cfg.reaperDelay || 0;
     cakes = [];
     cakeCooldown = cfg.cakeInterval || 0;
-    cables = [];
-    cableCooldown = cfg.cableInterval || 0;
+    thrownCandles = [];
+    candleThrowCooldown = cfg.candleThrowInterval || 0;
     playerStunT = 0;
     cakeHitFlash = 0;
     setAmbientLevel(level);
@@ -751,6 +756,7 @@
     endOverlay.style.display='none';
     state='playing';
     setTouchControlsVisible(true);
+    scheduleLevelBeat(level);
     requestAnimationFrame(loop);
   });
   document.getElementById('retryBtn').addEventListener('click', ()=>{
@@ -758,6 +764,7 @@
     endOverlay.style.display='none';
     state='playing';
     setTouchControlsVisible(true);
+    scheduleLevelBeat(level);
     requestAnimationFrame(loop);
   });
   continueBtn.addEventListener('click', ()=>{
@@ -767,6 +774,7 @@
     levelOverlay.style.display='none';
     state='playing';
     setTouchControlsVisible(true);
+    scheduleLevelBeat(level);
   });
   submitScoreBtn.addEventListener('click', async ()=>{
     if (scoreSubmitted) return;
@@ -789,11 +797,13 @@
     causeOfDeath = cause;
     totalScore += candlesFound.length*150; // partial credit for the round in progress
     state='jumpscare'; jumpT=0;
+    stopLevelBeat();
     setTouchControlsVisible(false);
     if (cause==='reaper') reaperCatchSound(); else jumpscareSound();
   }
   function triggerLevelComplete(){
     state='level_complete';
+    stopLevelBeat();
     setTouchControlsVisible(false);
     chime(784);
     const next = LEVELS[level+1];
@@ -804,6 +814,7 @@
   }
   function triggerWin(){
     state='win_pending'; jumpT=0;
+    stopLevelBeat();
     setTouchControlsVisible(false);
     winSound();
   }
@@ -849,7 +860,7 @@
       state='lose_out'; setTouchControlsVisible(false); jumpscareSound(); return;
     }
 
-    // movement — stunned (just hit by a thrown cake/cable) means slower for a moment, not stopped
+    // movement — stunned (just hit by a thrown cake/candle) means slower for a moment, not stopped
     let dx=0, dy=0;
     if (keys['KeyW']||keys['ArrowUp']||touchKeys.up) dy-=1;
     if (keys['KeyS']||keys['ArrowDown']||touchKeys.down) dy+=1;
@@ -955,28 +966,28 @@
       }
     }
 
-    // burning cable: past level 7, a nastier throw joins the cake — still non-lethal, but costs far more.
-    if (cfg.cableEnabled){
+    // burning candle throw: past level 7, a nastier throw joins the cake — still non-lethal, but costs far more.
+    if (cfg.candleThrowEnabled){
       if (!watched){
-        cableCooldown -= dt;
-        if (cableCooldown <= 0){
+        candleThrowCooldown -= dt;
+        if (candleThrowCooldown <= 0){
           const cang = Math.atan2(player.y-princess.y, player.x-princess.x);
-          cables.push({x:princess.x, y:princess.y, vx:Math.cos(cang)*cfg.cableSpeed, vy:Math.sin(cang)*cfg.cableSpeed, r:10, spin:Math.random()*Math.PI*2});
-          cableCooldown = cfg.cableInterval * (0.85+Math.random()*0.3);
+          thrownCandles.push({x:princess.x, y:princess.y, vx:Math.cos(cang)*cfg.candleThrowSpeed, vy:Math.sin(cang)*cfg.candleThrowSpeed, r:10, spin:Math.random()*Math.PI*2});
+          candleThrowCooldown = cfg.candleThrowInterval * (0.85+Math.random()*0.3);
           princess.throwT = THROW_ANIM_DUR; princess.throwDir = cang;
-          cableThrowSound();
+          candleThrowSound();
         }
       }
-      for (let i=cables.length-1;i>=0;i--){
-        const k = cables[i];
+      for (let i=thrownCandles.length-1;i>=0;i--){
+        const k = thrownCandles[i];
         k.x += k.vx*dt; k.y += k.vy*dt; k.spin += dt*14;
-        if (k.x<-20||k.x>W+20||k.y<-20||k.y>H+20){ cables.splice(i,1); continue; }
+        if (k.x<-20||k.x>W+20||k.y<-20||k.y>H+20){ thrownCandles.splice(i,1); continue; }
         if (Math.hypot(player.x-k.x, player.y-k.y) < player.r+k.r){
-          cables.splice(i,1);
+          thrownCandles.splice(i,1);
           playerStunT = 1.3; cakeHitFlash = 1;
           battery = Math.max(0, battery - cfg.battery*0.55);
           if (battery<=0) flashlightOn=false;
-          cableHitSound();
+          candleHitSound();
         }
       }
     }
@@ -1087,22 +1098,22 @@
     ctx.beginPath(); ctx.arc(0,0,k.r,0,Math.PI*2); ctx.stroke();
     ctx.restore();
   }
-  function drawCable(k){
-    const ang = Math.atan2(k.vy,k.vx);
+  function drawThrownCandle(k){
+    // a real candle stick tumbling end-over-end as it flies, flame trailing at the lit end —
+    // k.spin is a continuously-increasing rotation (not tied to travel direction) for the tumble
     ctx.save();
     ctx.translate(k.x,k.y);
-    ctx.rotate(ang);
-    ctx.strokeStyle = '#161616'; ctx.lineWidth = 4; ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(-k.r*1.9,0);
-    ctx.quadraticCurveTo(-k.r*0.9, Math.sin(k.spin*3)*4, 0,0);
-    ctx.stroke();
+    ctx.rotate(k.spin);
+    ctx.fillStyle = '#d8cbb8';
+    ctx.fillRect(-3,-k.r,6,k.r*2);
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 1;
+    ctx.strokeRect(-3,-k.r,6,k.r*2);
     const flick = 0.85+Math.random()*0.15;
     ctx.shadowColor = '#ff8a2a'; ctx.shadowBlur = 14;
     ctx.fillStyle = 'rgba(255,140,40,0.95)';
-    ctx.beginPath(); ctx.ellipse(k.r*0.4,0,7*flick,5*flick,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0,-k.r-6*flick,4.5*flick,7*flick,0,0,Math.PI*2); ctx.fill();
     ctx.fillStyle = 'rgba(255,220,120,0.95)';
-    ctx.beginPath(); ctx.ellipse(k.r*0.55,0,3.5*flick,2.6*flick,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0,-k.r-4*flick,2.2*flick,3.5*flick,0,0,Math.PI*2); ctx.fill();
     ctx.shadowBlur = 0;
     ctx.restore();
   }
@@ -1188,15 +1199,14 @@
     ctx.beginPath(); ctx.arc(0,-h*0.55,w*1.15,0,Math.PI*2); ctx.fill();
 
     // aura glow must stay under the outline below — draw order, not z-index, is what keeps her linework crisp
-    // strong, crisp white outline — thickened well beyond the source line so her body reads clearly at a glance
+    // a modest outline, thickened just enough to read at a glance without blooming out the linework detail
     ctx.shadowColor = 'rgba(255,252,240,1)';
-    ctx.shadowBlur = 16;
-    ctx.globalAlpha = 0.85;
-    const offs = [[-2,0],[2,0],[0,-2],[0,2],[-1.5,-1.5],[1.5,-1.5],[-1.5,1.5],[1.5,1.5],[-1,0],[1,0],[0,-1],[0,1]];
+    ctx.shadowBlur = 8;
+    ctx.globalAlpha = 0.45;
+    const offs = [[-1.5,0],[1.5,0],[0,-1.5],[0,1.5],[-1,-1],[1,-1],[-1,1],[1,1]];
     for (const [ox,oy] of offs) ctx.drawImage(spriteCanvas, -w/2+ox, -h+oy, w, h);
     ctx.globalAlpha = 1;
-    ctx.shadowBlur = 4;
-    ctx.drawImage(spriteCanvas, -w/2, -h, w, h);
+    ctx.shadowBlur = 2;
     ctx.drawImage(spriteCanvas, -w/2, -h, w, h);
     ctx.shadowBlur = 0;
 
@@ -1351,7 +1361,7 @@
     drawThrowBurst();
     drawReaper();
     for (const k of cakes) drawCake(k, cfg.cakeColor);
-    for (const k of cables) drawCable(k);
+    for (const k of thrownCandles) drawThrownCandle(k);
     drawPlayer();
     if (state==='playing') drawVisionMask();
 
@@ -1543,6 +1553,49 @@
   const startScreenDance = makeBouncingDancer(walkCanvas, wctx, ()=>state==='start');
   const levelCompleteDance = makeBouncingDancer(danceCanvas, dctx, ()=>state==='level_complete');
 
+  // a row of small flickering candle flames along the bottom of the start screen — purely
+  // decorative, same layered-teardrop technique as the in-game candle flames
+  function makeFlameRow(canvasEl, fctx, isActive, count){
+    let phase = 0, last = null;
+    function frame(ts){
+      if (!isActive()){ last = null; return; }
+      if (last===null) last = ts;
+      const dt = Math.min(0.05, (ts-last)/1000);
+      last = ts;
+      phase += dt;
+      const w = canvasEl.width, h = canvasEl.height;
+      fctx.clearRect(0,0,w,h);
+      const spacing = w/(count+1);
+      for (let i=0;i<count;i++){
+        const x = spacing*(i+1), y = h-8, seed = i*1.7;
+        const flick = 0.85+0.15*Math.sin(phase*9+seed*3);
+        const sway = Math.sin(phase*3+seed)*2.2;
+        const scale = 0.8+0.12*Math.sin(phase*5+seed*2);
+        fctx.save();
+        fctx.translate(x,y);
+        fctx.shadowColor = '#ffcf7a'; fctx.shadowBlur = 10;
+        function layer(halfWidth,height,yTip,color){
+          fctx.beginPath();
+          fctx.moveTo(0,0);
+          fctx.quadraticCurveTo(-halfWidth,-height*0.45, sway*(height/22), -height*flick*scale+yTip);
+          fctx.quadraticCurveTo(halfWidth,-height*0.45, 0,0);
+          fctx.closePath();
+          fctx.fillStyle = color;
+          fctx.fill();
+        }
+        layer(6,20,0,'rgba(255,120,20,0.9)');
+        layer(4.3,14,-2,'rgba(255,180,55,0.9)');
+        layer(2.8,9,-3,'rgba(255,230,140,0.9)');
+        layer(1.4,5,-4,'rgba(210,235,255,0.9)');
+        fctx.shadowBlur = 0;
+        fctx.restore();
+      }
+      requestAnimationFrame(frame);
+    }
+    return function start(){ last = null; requestAnimationFrame(frame); };
+  }
+  const startFlameRow = makeFlameRow(flameStripCanvas, fsctx, ()=>state==='start', 9);
+
   // ---------- demonic opening-screen beat ----------
   // browsers block audio before any user gesture, so this arms on the first click/keypress
   // anywhere and then loops for as long as the start screen is up
@@ -1556,18 +1609,19 @@
     o.connect(g); g.connect(masterGain);
     o.start(t); o.stop(t+0.2);
   }
-  function bounceWobble(baseFreq, dur){
+  function bounceWobble(baseFreq, dur, q){
     if (!ac) return;
     const t = ac.currentTime;
     const o = ac.createOscillator(); o.type = 'sawtooth';
     o.frequency.setValueAtTime(baseFreq*2, t);
     o.frequency.exponentialRampToValueAtTime(Math.max(20,baseFreq*0.5), t+dur*0.9);
-    const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = 9;
+    const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = q||9;
     f.frequency.setValueAtTime(1400,t); f.frequency.exponentialRampToValueAtTime(140,t+dur*0.9);
     const g = ac.createGain(); g.gain.setValueAtTime(0.26,t); g.gain.exponentialRampToValueAtTime(0.0001,t+dur*0.95);
     o.connect(f); f.connect(g); g.connect(masterGain);
     o.start(t); o.stop(t+dur);
   }
+  function hatTick(){ noiseBurst(0.05, 0.12); }
   function scheduleOpeningBeat(){
     if (openingBeatTimer || !ac) return;
     const bpm = 140, stepDur = 60/bpm/2; // 8th notes, demonic Melbourne-bounce tempo
@@ -1584,6 +1638,44 @@
   function stopOpeningBeat(){
     if (openingBeatTimer){ clearTimeout(openingBeatTimer); openingBeatTimer = null; }
   }
+
+  // ---------- per-level Melbourne-bounce beat ----------
+  // each level gets its own tune during actual gameplay — not just a tempo bump, but a
+  // different step pattern, root pitch and filter squelch so all ten rounds sound distinct
+  const BOUNCE_PARAMS = [
+    {bpm:126, root:46, q:8,  pattern:['K','','W','','K','','W','H']},               // 1 morning — simple, easy bounce
+    {bpm:132, root:44, q:8,  pattern:['K','H','W','','K','H','W','H']},             // 2 evening — adds hats
+    {bpm:138, root:41, q:9,  pattern:['K','','WK','','K','H','W','']},              // 3 midnight — syncopated
+    {bpm:144, root:39, q:9,  pattern:['K','W','','H','K','W','','H']},              // 4 witching hour — faster, punchier
+    {bpm:150, root:43, q:10, pattern:['K','H','W','H','K','H','W','H']},            // 5 sugar rush — busy, playful
+    {bpm:134, root:35, q:11, pattern:['K','','W','H','','K','W','']},               // 6 blood moon — heavier, spaced out
+    {bpm:142, root:33, q:11, pattern:['K','W','H','','K','','WK','H']},             // 7 hollow hour — off-kilter
+    {bpm:150, root:31, q:13, pattern:['K','W','K','H','K','W','K','H']},            // 8 screaming walls — dense, aggressive
+    {bpm:128, root:29, q:12, pattern:['K','','','W','','','K','H']},                // 9 the long dark — sparse, dread
+    {bpm:160, root:27, q:14, pattern:['K','W','K','W','K','W','K','W']},            // 10 the last candle — frantic, nonstop
+  ];
+  let levelBeatTimer = null;
+  function scheduleLevelBeat(lvl){
+    stopLevelBeat();
+    if (!ac) return;
+    const p = BOUNCE_PARAMS[lvl] || BOUNCE_PARAMS[BOUNCE_PARAMS.length-1];
+    const stepDur = 60/p.bpm/2; // 8th notes
+    let step = 0;
+    function playStep(){
+      if (state !== 'playing'){ levelBeatTimer = null; return; }
+      const s = p.pattern[step % p.pattern.length];
+      if (s.includes('K')) kickDrum();
+      if (s.includes('W')) bounceWobble(p.root + (step%8===3 ? 16 : 0), stepDur, p.q);
+      if (s.includes('H')) hatTick();
+      step = (step+1) % p.pattern.length;
+      levelBeatTimer = setTimeout(playStep, stepDur*1000);
+    }
+    playStep();
+  }
+  function stopLevelBeat(){
+    if (levelBeatTimer){ clearTimeout(levelBeatTimer); levelBeatTimer = null; }
+  }
+
   function armOpeningBeat(){
     initAudio();
     if (state==='start') scheduleOpeningBeat();
@@ -1594,5 +1686,6 @@
   resetGame();
   idleDraw();
   startScreenDance();
+  startFlameRow();
 })();
 </script>
