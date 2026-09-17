@@ -852,6 +852,19 @@
       ctx.arc(0,0,len,-spread,spread); ctx.closePath(); ctx.fill();
       ctx.restore();
     }
+    // she glows on her own — let her presence punch a soft hole through the darkness
+    // so she's visible approaching from a distance, not just when the flashlight hits her
+    if (princess){
+      const pr = 70 + princess.angryPulse*70;
+      let pg = ctx.createRadialGradient(princess.x,princess.y,2,princess.x,princess.y,pr);
+      pg.addColorStop(0,'rgba(0,0,0,0.95)'); pg.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=pg; ctx.beginPath(); ctx.arc(princess.x,princess.y,pr,0,Math.PI*2); ctx.fill();
+    }
+    if (reaper && reaperSpawned){
+      let rg = ctx.createRadialGradient(reaper.x,reaper.y,2,reaper.x,reaper.y,55);
+      rg.addColorStop(0,'rgba(0,0,0,0.7)'); rg.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=rg; ctx.beginPath(); ctx.arc(reaper.x,reaper.y,55,0,Math.PI*2); ctx.fill();
+    }
     ctx.globalCompositeOperation='source-over';
     ctx.restore();
   }
