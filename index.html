@@ -188,20 +188,18 @@
     try { frame = sctx.getImageData(0,0,w,h); }
     catch(e){ console.warn('cutout skipped (canvas read blocked, e.g. file:// origin):', e); return; }
     const d = frame.data;
-    // narrow feather band + hard noise cutoff: only bold ink survives, all paper/shadow/JPEG noise goes fully transparent
-    const inkThresh = 95, whiteThresh = 185;
+    // hard binary cutout, no feathered/partial alpha — a white pixel at low opacity over
+    // a black room reads as dim gray, not white, so every surviving pixel goes fully opaque
+    const inkThresh = 150;
     let opaqueCount = 0;
     for (let i=0;i<d.length;i+=4){
       const lum = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
-      let a;
-      if (lum>=whiteThresh) a = 0;
-      else if (lum<=inkThresh) a = 255;
-      else a = Math.round(255*(1-(lum-inkThresh)/(whiteThresh-inkThresh)));
-      if (a < 70) a = 0; else opaqueCount++;
-      // recolor the surviving linework to bright white — the original dark ink
-      // is invisible against the dark room, alpha alone carries the shape now
-      d[i] = 255; d[i+1] = 253; d[i+2] = 248;
-      d[i+3] = a;
+      if (lum <= inkThresh){
+        d[i] = 255; d[i+1] = 255; d[i+2] = 255; d[i+3] = 255;
+        opaqueCount++;
+      } else {
+        d[i+3] = 0;
+      }
     }
     if (opaqueCount < (w*h)*0.01){
       console.warn('cutout skipped (near-empty result — crop/threshold mismatch), keeping original crop');
@@ -360,8 +358,6 @@
   // shared house layout: outer border + one wide divider with a big open doorway — two simple rooms, easy to read and move through.
   const walls = [
     {x:0,y:0,w:W,h:12},{x:0,y:H-12,w:W,h:12},{x:0,y:0,w:12,h:H},{x:W-12,y:0,w:12,h:H},
-    {x:390,y:0,w:16,h:220},
-    {x:390,y:420,w:16,h:H-420},
   ];
   const ALL_CANDLES = [
     {x:120,y:100},{x:340,y:250},{x:700,y:80},{x:120,y:520},{x:640,y:520}
