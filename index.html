@@ -46,24 +46,13 @@
   .hud b{ color:var(--ink); }
   .meter{ width:110px; height:8px; border:1px solid var(--line); border-radius:4px; overflow:hidden; display:inline-block; vertical-align:middle; margin-left:6px;}
   .meter i{ display:block; height:100%; background:var(--accent2); }
-  #touchLight, #touchIgnite{
-    position:absolute; bottom:14px; width:76px; height:76px; border-radius:50%;
+  #touchLight{
+    position:absolute; bottom:14px; right:14px; width:76px; height:76px; border-radius:50%;
     font-size:11px; letter-spacing:1px; display:none; align-items:center; justify-content:center; text-align:center;
     user-select:none; -webkit-user-select:none;
+    background:rgba(255,183,3,.15); border:2px solid var(--accent2); color:var(--accent2);
   }
-  #touchLight{
-    right:14px; background:rgba(255,183,3,.15); border:2px solid var(--accent2); color:var(--accent2);
-  }
-  #touchIgnite{
-    left:14px; background:rgba(255,120,40,.15); border:2px solid #ff7a28; color:#ff9d54;
-  }
-  @media (pointer:coarse){ #touchLight, #touchIgnite{ display:flex; } }
-  #candlePrompt{
-    position:absolute; left:50%; top:14px; transform:translateX(-50%);
-    background:rgba(10,7,7,.75); border:1px solid var(--line); color:var(--accent2);
-    font-size:12px; letter-spacing:1px; padding:6px 12px; border-radius:4px; display:none;
-    pointer-events:none; white-space:nowrap;
-  }
+  @media (pointer:coarse){ #touchLight{ display:flex; } }
   .credit{ color:#5a4a44; font-size:11px; letter-spacing:1px; text-align:center; }
 
   .board{ width:100%; max-width:360px; margin-top:4px; }
@@ -107,13 +96,11 @@
     <div>Light <span class="meter"><i id="hudBattery" style="width:100%"></i></span></div>
     <div id="hudTime">Level 1</div>
   </div>
-  <div class="hint"><b>WASD</b> move · <b>mouse</b> aims · hold <b>SPACE</b> for flashlight (freezes her) · stand by a candle and hold <b>E</b> to light it</div>
+  <div class="hint"><b>WASD</b> move · <b>mouse</b> aims · hold <b>SPACE</b> for flashlight (freezes her) · walk into an unlit candle to light it</div>
 
   <div class="stage" id="stage">
     <canvas id="c" width="800" height="600"></canvas>
-    <div id="candlePrompt">HOLD E TO LIGHT</div>
     <div id="touchLight">HOLD<br>FOR<br>LIGHT</div>
-    <div id="touchIgnite">HOLD<br>TO<br>LIGHT</div>
 
     <div class="overlay" id="startOverlay">
       <img src="Messenger_creation_FD88BBDC-B500-418B-B437-A968789A55A8.jpeg" alt="the princess"/>
@@ -122,10 +109,10 @@
         <b>Move</b> — WASD or arrow keys<br>
         <b>Aim</b> — point your mouse<br>
         <b>Flashlight</b> — hold Space (or click). While it's on her, she can't move at all — but the meter drains.<br>
-        <b>Light a candle</b> — walk up to an unlit one. When "HOLD E TO LIGHT" appears, hold <b>E</b> until it catches. Let go too soon and you start over.<br>
+        <b>Light a candle</b> — just walk into an unlit one. It catches instantly, no waiting.<br>
         <b>Goal</b> — light every candle in the room, then walk through the glowing door.<br><br>
         <b>Level 1 is an easy warm-up</b> — just 2 candles, she starts far away and moves slowly. It gets faster and darker from there.<br><br>
-        <span style="font-size:13px;">Touch controls: drag anywhere to move · hold the right dial for light · hold the left dial next to a candle to light it.</span>
+        <span style="font-size:13px;">Touch controls: drag anywhere to move · hold the dial for light.</span>
       </p>
       <button id="startBtn">LIGHT THE FIRST CANDLE</button>
       <div class="board" id="startBoardWrap">
@@ -176,8 +163,6 @@
   const hudBattery = document.getElementById('hudBattery');
   const hudTime = document.getElementById('hudTime');
   const touchLightBtn = document.getElementById('touchLight');
-  const touchIgniteBtn = document.getElementById('touchIgnite');
-  const candlePrompt = document.getElementById('candlePrompt');
   const levelOverlay = document.getElementById('levelOverlay');
   const levelTitle = document.getElementById('levelTitle');
   const levelText = document.getElementById('levelText');
@@ -213,9 +198,9 @@
       else if (lum<=inkThresh) a = 255;
       else a = Math.round(255*(1-(lum-inkThresh)/(whiteThresh-inkThresh)));
       if (a < 70) a = 0; else opaqueCount++;
-      // recolor the surviving linework to a pale ghost-white — the original dark ink
+      // recolor the surviving linework to bright white — the original dark ink
       // is invisible against the dark room, alpha alone carries the shape now
-      d[i] = 232; d[i+1] = 226; d[i+2] = 216;
+      d[i] = 255; d[i+1] = 253; d[i+2] = 248;
       d[i+3] = a;
     }
     if (opaqueCount < (w*h)*0.01){
@@ -423,8 +408,7 @@
   let state = 'start'; // start | playing | jumpscare | level_complete | win_pending | lose_out | ended
   let level = 0, totalScore = 0, currentScore = 0, scoreSubmitted = false, causeOfDeath = 'princess';
   let player, princess, keys, mouse, flashlightOn, battery, candlesFound, midnightTimer, unwatchedTime, jumpT, lastTime, clock;
-  let touchTarget = null, touchLightHeld = false, touchIgniteHeld = false;
-  let candleLightTarget = null, candleLightProgress = 0;
+  let touchTarget = null, touchLightHeld = false;
   let blockers = walls;
   let reaper = null, reaperTimer = 0, reaperSpawned = false, reaperFlash = 0;
 
@@ -438,9 +422,6 @@
     candlesFound = [];
     midnightTimer = cfg.timeLimit;
     unwatchedTime = 0;
-    candleLightTarget = null;
-    candleLightProgress = 0;
-    candlePrompt.style.display = 'none';
     blockers = walls.concat(cfg.obstacles||[]);
     reaperSpawned = false;
     reaperFlash = 0;
@@ -451,7 +432,7 @@
   }
   function resetGame(){
     level = 0; totalScore = 0;
-    keys = {}; touchTarget = null; touchLightHeld = false; touchIgniteHeld = false;
+    keys = {}; touchTarget = null; touchLightHeld = false;
     jumpT = 0; lastTime = null; clock = 0;
     resetLevel();
   }
@@ -518,8 +499,6 @@
   stage.addEventListener('touchend', ()=>{ touchTarget = null; });
   touchLightBtn.addEventListener('touchstart', e=>{ touchLightHeld=true; flashlightOn=true; e.stopPropagation(); e.preventDefault();});
   touchLightBtn.addEventListener('touchend', e=>{ touchLightHeld=false; flashlightOn=false; e.stopPropagation(); e.preventDefault();});
-  touchIgniteBtn.addEventListener('touchstart', e=>{ touchIgniteHeld=true; e.stopPropagation(); e.preventDefault();});
-  touchIgniteBtn.addEventListener('touchend', e=>{ touchIgniteHeld=false; e.stopPropagation(); e.preventDefault();});
 
   // ---------- game flow ----------
   document.getElementById('startBtn').addEventListener('click', ()=>{
@@ -690,33 +669,14 @@
       }
     }
 
-    // candles: hold E (or the touch dial) next to an unlit one to light it
-    let nearCandle = null, nearDist = cfg.lightRadius;
+    // candles: light instantly the moment you walk into one
     for (const c of cfg.candles){
       if (candlesFound.includes(c)) continue;
       const d2 = Math.hypot(player.x-c.x, player.y-c.y);
-      if (d2 < nearDist){ nearCandle = c; nearDist = d2; }
-    }
-    const lightHeld = !!keys['KeyE'] || touchIgniteHeld;
-    if (nearCandle){
-      if (lightHeld){
-        if (candleLightTarget !== nearCandle){ candleLightTarget = nearCandle; candleLightProgress = 0; }
-        candleLightProgress += dt;
-        if (candleLightProgress >= cfg.lightTime){
-          candlesFound.push(nearCandle);
-          chime(660+candlesFound.length*40);
-          candleLightTarget = null; candleLightProgress = 0;
-        }
-        candlePrompt.style.display = 'block';
-        candlePrompt.textContent = 'LIGHTING...';
-      } else {
-        candleLightTarget = null; candleLightProgress = 0;
-        candlePrompt.style.display = 'block';
-        candlePrompt.textContent = 'HOLD E TO LIGHT';
+      if (d2 < cfg.lightRadius){
+        candlesFound.push(c);
+        chime(660+candlesFound.length*40);
       }
-    } else {
-      candleLightTarget = null; candleLightProgress = 0;
-      candlePrompt.style.display = 'none';
     }
 
     // door
@@ -731,10 +691,12 @@
 
   // ---------- draw ----------
   function drawWalls(){
-    ctx.fillStyle = '#241a17';
+    ctx.fillStyle = '#5a453c';
     for (const w of walls) ctx.fillRect(w.x,w.y,w.w,w.h);
-    ctx.strokeStyle = '#3a2a26';
+    ctx.strokeStyle = '#8a6a56';
+    ctx.lineWidth = 2;
     for (const w of walls) ctx.strokeRect(w.x,w.y,w.w,w.h);
+    ctx.lineWidth = 1;
   }
   function drawObstacles(list){
     for (const o of list){
@@ -756,25 +718,21 @@
   function drawCandle(c, lit){
     ctx.save(); ctx.translate(c.x,c.y);
     ctx.fillStyle = '#d8cbb8'; ctx.fillRect(-3,-2,6,14);
-    if (!lit){
-      const flick = 0.6+Math.random()*0.4;
-      ctx.fillStyle = `rgba(255,${140+Math.floor(60*flick)},60,${0.8*flick})`;
-      ctx.beginPath(); ctx.ellipse(0,-10,4,7*flick,0,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle='rgba(255,220,150,0.5)';
-      ctx.beginPath(); ctx.arc(0,-8,14*flick,0,Math.PI*2); ctx.fill();
+    if (lit){
+      // fully lit: bright, steady flame
+      const flick = 0.85+Math.random()*0.15;
+      ctx.fillStyle = `rgba(255,190,90,${0.95*flick})`;
+      ctx.beginPath(); ctx.ellipse(0,-11,5,9*flick,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,230,170,0.6)';
+      ctx.beginPath(); ctx.arc(0,-9,22*flick,0,Math.PI*2); ctx.fill();
+    } else {
+      // not yet lit: a soft pale pre-glow so it's easy to spot from a distance, clearly not burning yet
+      const pulse = 0.5+0.5*Math.sin(clock*2.4 + c.x*0.1 + c.y*0.1);
+      ctx.fillStyle = `rgba(190,170,255,${0.18+0.12*pulse})`;
+      ctx.beginPath(); ctx.arc(0,-8,13+5*pulse,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = `rgba(220,205,255,${0.35+0.2*pulse})`;
+      ctx.beginPath(); ctx.arc(0,-9,3+1.5*pulse,0,Math.PI*2); ctx.fill();
     }
-    ctx.restore();
-  }
-  function drawCandleProgress(){
-    if (!candleLightTarget || candleLightProgress<=0) return;
-    const c = candleLightTarget;
-    const frac = Math.min(1, candleLightProgress/LEVELS[level].lightTime);
-    ctx.save();
-    ctx.translate(c.x, c.y-22);
-    ctx.strokeStyle = 'rgba(60,40,30,0.6)'; ctx.lineWidth=3;
-    ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI*2); ctx.stroke();
-    ctx.strokeStyle = '#ffb703'; ctx.lineWidth=3;
-    ctx.beginPath(); ctx.arc(0,0,10,-Math.PI/2,-Math.PI/2+frac*Math.PI*2); ctx.stroke();
     ctx.restore();
   }
   function drawDoor(active){
@@ -806,22 +764,23 @@
     ctx.translate(princess.x+jx, princess.y - bob + jy);
     ctx.rotate(tilt);
 
-    // constant soft aura so she reads as a glowing presence even before the linework resolves
-    const auraColor = princess.angryPulse>0.2 ? 'rgba(255,60,60,0.4)' : 'rgba(255,248,230,0.32)';
-    let aura = ctx.createRadialGradient(0,-h*0.55,2,0,-h*0.55,w*0.95);
+    // constant bright aura so she reads as a glowing presence even before the linework resolves
+    const auraColor = princess.angryPulse>0.2 ? 'rgba(255,70,70,0.6)' : 'rgba(255,252,235,0.55)';
+    let aura = ctx.createRadialGradient(0,-h*0.55,2,0,-h*0.55,w*1.3);
     aura.addColorStop(0, auraColor);
-    aura.addColorStop(1, 'rgba(255,248,230,0)');
+    aura.addColorStop(1, 'rgba(255,252,235,0)');
     ctx.fillStyle = aura;
-    ctx.beginPath(); ctx.arc(0,-h*0.55,w*0.95,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0,-h*0.55,w*1.3,0,Math.PI*2); ctx.fill();
 
-    // soft ghostly glow so pale linework still pops against the dark room
-    ctx.shadowColor = princess.angryPulse>0.2 ? 'rgba(255,40,40,0.95)' : 'rgba(255,245,230,0.9)';
-    ctx.shadowBlur = 16;
+    // bright ghostly glow so the linework pops hard against the dark room
+    ctx.shadowColor = princess.angryPulse>0.2 ? 'rgba(255,50,50,1)' : 'rgba(255,250,235,1)';
+    ctx.shadowBlur = 26;
     // thicken the thin cutout linework with offset passes so it's bold, not faint
-    ctx.globalAlpha = 0.5;
-    const offs = [[-1.4,0],[1.4,0],[0,-1.4],[0,1.4]];
+    ctx.globalAlpha = 0.65;
+    const offs = [[-1.6,0],[1.6,0],[0,-1.6],[0,1.6],[-1.2,-1.2],[1.2,-1.2],[-1.2,1.2],[1.2,1.2]];
     for (const [ox,oy] of offs) ctx.drawImage(spriteCanvas, -w/2+ox, -h+oy, w, h);
     ctx.globalAlpha = 1;
+    ctx.drawImage(spriteCanvas, -w/2, -h, w, h);
     ctx.drawImage(spriteCanvas, -w/2, -h, w, h);
     ctx.shadowBlur = 0;
 
@@ -926,7 +885,6 @@
     drawWalls();
     drawObstacles(cfg.obstacles||[]);
     for (const c of cfg.candles) drawCandle(c, candlesFound.includes(c));
-    drawCandleProgress();
     drawDoor(candlesFound.length===cfg.candles.length);
     drawPrincess();
     drawReaper();
