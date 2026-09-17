@@ -49,23 +49,23 @@
   .meter{ width:110px; height:8px; border:1px solid var(--line); border-radius:4px; overflow:hidden; display:inline-block; vertical-align:middle; margin-left:6px;}
   .meter i{ display:block; height:100%; background:var(--accent2); }
   .touchControls{
-    display:none; width:100%; max-width:560px; justify-content:space-between; align-items:center;
+    display:none; width:100%; max-width:560px; justify-content:center; align-items:center; gap:56px;
     padding-bottom:calc(4px + env(safe-area-inset-bottom, 0px));
   }
   @media (pointer:coarse){ .touchControls{ display:flex; } }
   #touchLight{
-    width:76px; height:76px; border-radius:50%;
-    font-size:11px; letter-spacing:1px; display:flex; align-items:center; justify-content:center; text-align:center;
+    width:96px; height:96px; border-radius:50%;
+    font-size:12.5px; letter-spacing:1px; display:flex; align-items:center; justify-content:center; text-align:center;
     user-select:none; -webkit-user-select:none;
     background:rgba(255,183,3,.15); border:2px solid var(--accent2); color:var(--accent2);
   }
   #dpad{
-    display:grid; grid-template-columns:repeat(3, 44px); grid-template-rows:repeat(3, 44px); gap:4px;
+    display:grid; grid-template-columns:repeat(3, 58px); grid-template-rows:repeat(3, 58px); gap:6px;
   }
   .dbtn{
-    display:flex; align-items:center; justify-content:center; border-radius:8px;
+    display:flex; align-items:center; justify-content:center; border-radius:10px;
     background:rgba(155,48,255,0.28); border:2px solid rgba(200,140,255,0.65); color:#f0d9ff;
-    font-size:18px; user-select:none; -webkit-user-select:none; touch-action:none;
+    font-size:24px; user-select:none; -webkit-user-select:none; touch-action:none;
   }
   .dbtn.active{ background:rgba(155,48,255,0.55); }
   #dpUp{ grid-column:2; grid-row:1; }
@@ -124,9 +124,10 @@
     .board li{ padding:4px 8px; font-size:12px; }
   }
   @media (pointer:coarse) and (max-width:480px){
-    #dpad{ grid-template-columns:repeat(3, 34px); grid-template-rows:repeat(3, 34px); }
-    .dbtn{ font-size:14px; border-radius:6px; }
-    #touchLight{ width:58px; height:58px; font-size:9.5px; }
+    .touchControls{ gap:28px; }
+    #dpad{ grid-template-columns:repeat(3, 50px); grid-template-rows:repeat(3, 50px); }
+    .dbtn{ font-size:20px; }
+    #touchLight{ width:84px; height:84px; font-size:11px; }
   }
 </style>
 
@@ -837,27 +838,36 @@
   function drawPlayer(){
     ctx.save();
     ctx.translate(player.x, player.y);
-    const pulse = 0.85+0.15*Math.sin(clock*4);
+    const pulse = 0.9+0.1*Math.sin(clock*4);
+    const vr = player.r*1.6; // drawn visual size — bigger than the actual (unchanged) collision radius
     // additive (lighter) blending makes this genuinely glow brighter, not just more translucent
     ctx.globalCompositeOperation = 'lighter';
-    let pg1 = ctx.createRadialGradient(0,0,2,0,0,player.r*15);
-    pg1.addColorStop(0, `rgba(220,150,255,${0.55*pulse})`); pg1.addColorStop(1,'rgba(220,150,255,0)');
-    ctx.fillStyle = pg1; ctx.beginPath(); ctx.arc(0,0,player.r*15,0,Math.PI*2); ctx.fill();
-    let pg2 = ctx.createRadialGradient(0,0,2,0,0,player.r*7);
-    pg2.addColorStop(0, `rgba(235,190,255,${0.95*pulse})`); pg2.addColorStop(1,'rgba(235,190,255,0)');
-    ctx.fillStyle = pg2; ctx.beginPath(); ctx.arc(0,0,player.r*7,0,Math.PI*2); ctx.fill();
-    let pg3 = ctx.createRadialGradient(0,0,1,0,0,player.r*2.5);
-    pg3.addColorStop(0,'rgba(255,255,255,0.95)'); pg3.addColorStop(0.4,'rgba(230,170,255,0.9)'); pg3.addColorStop(1,'rgba(230,170,255,0)');
-    ctx.fillStyle = pg3; ctx.beginPath(); ctx.arc(0,0,player.r*2.5,0,Math.PI*2); ctx.fill();
+    let pg1 = ctx.createRadialGradient(0,0,2,0,0,vr*13);
+    pg1.addColorStop(0, `rgba(225,160,255,${0.75*pulse})`); pg1.addColorStop(1,'rgba(225,160,255,0)');
+    ctx.fillStyle = pg1; ctx.beginPath(); ctx.arc(0,0,vr*13,0,Math.PI*2); ctx.fill();
+    let pg2 = ctx.createRadialGradient(0,0,2,0,0,vr*6);
+    pg2.addColorStop(0, `rgba(240,200,255,${1*pulse})`); pg2.addColorStop(1,'rgba(240,200,255,0)');
+    ctx.fillStyle = pg2; ctx.beginPath(); ctx.arc(0,0,vr*6,0,Math.PI*2); ctx.fill();
+    let pg3 = ctx.createRadialGradient(0,0,1,0,0,vr*2.6);
+    pg3.addColorStop(0,'rgba(255,255,255,1)'); pg3.addColorStop(0.4,'rgba(235,180,255,1)'); pg3.addColorStop(1,'rgba(235,180,255,0)');
+    ctx.fillStyle = pg3; ctx.beginPath(); ctx.arc(0,0,vr*2.6,0,Math.PI*2); ctx.fill();
+    // small rotating sparkle flares for extra unmissable pop
+    for (let i=0;i<4;i++){
+      const a = clock*2 + i*(Math.PI/2);
+      const fx = Math.cos(a)*vr*1.9, fy = Math.sin(a)*vr*1.9;
+      let fg = ctx.createRadialGradient(fx,fy,0,fx,fy,vr*0.7);
+      fg.addColorStop(0,'rgba(255,255,255,0.9)'); fg.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.fillStyle = fg; ctx.beginPath(); ctx.arc(fx,fy,vr*0.7,0,Math.PI*2); ctx.fill();
+    }
     ctx.globalCompositeOperation = 'source-over';
-    ctx.shadowColor = '#f2d9ff'; ctx.shadowBlur = 55;
-    ctx.fillStyle = '#d060ff';
-    ctx.beginPath(); ctx.arc(0,0,player.r,0,Math.PI*2); ctx.fill();
+    ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 60;
+    ctx.fillStyle = '#e070ff';
+    ctx.beginPath(); ctx.arc(0,0,vr,0,Math.PI*2); ctx.fill();
     ctx.fillStyle = '#ffffff';
-    ctx.beginPath(); ctx.arc(0,0,player.r*0.5,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0,0,vr*0.55,0,Math.PI*2); ctx.fill();
     ctx.shadowBlur = 0;
     ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(0,0,player.r,0,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0,0,vr,0,Math.PI*2); ctx.stroke();
     ctx.restore();
   }
   function drawPrincess(){
