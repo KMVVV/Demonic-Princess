@@ -1,4 +1,5 @@
 <title>SHE TURNS FOUR</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Creepster&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
   :root{
@@ -27,10 +28,11 @@
   }
   canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
   .overlay{
-    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:safe center;
     gap:16px; text-align:center; padding:24px; background:rgba(5,3,3,.88); backdrop-filter:blur(2px);
+    overflow-y:auto; -webkit-overflow-scrolling:touch;
   }
-  .overlay img{ max-width:150px; border-radius:6px; box-shadow:0 0 30px rgba(255,45,45,.4); filter:contrast(1.05) saturate(.9);}
+  .overlay img{ max-width:150px; border-radius:6px; box-shadow:0 0 30px rgba(255,45,45,.4); filter:contrast(1.05) saturate(.9); flex-shrink:0;}
   .overlay h2{ color:var(--accent); letter-spacing:2px; margin:0; font-size:clamp(20px,5vw,30px); font-family:'Creepster',cursive; font-weight:400;}
   .overlay p{ color:var(--muted); max-width:460px; font-size:14.5px; line-height:1.65; margin:0;}
   button{
@@ -47,12 +49,22 @@
   .meter{ width:110px; height:8px; border:1px solid var(--line); border-radius:4px; overflow:hidden; display:inline-block; vertical-align:middle; margin-left:6px;}
   .meter i{ display:block; height:100%; background:var(--accent2); }
   #touchLight{
-    position:absolute; bottom:14px; right:14px; width:76px; height:76px; border-radius:50%;
+    position:absolute; bottom:calc(14px + env(safe-area-inset-bottom, 0px)); right:14px; width:76px; height:76px; border-radius:50%;
     font-size:11px; letter-spacing:1px; display:none; align-items:center; justify-content:center; text-align:center;
     user-select:none; -webkit-user-select:none;
     background:rgba(255,183,3,.15); border:2px solid var(--accent2); color:var(--accent2);
   }
-  @media (pointer:coarse){ #touchLight{ display:flex; } }
+  #joyBase{
+    position:absolute; bottom:calc(14px + env(safe-area-inset-bottom, 0px)); left:14px; width:120px; height:120px; border-radius:50%;
+    background:rgba(255,255,255,0.06); border:2px solid rgba(255,255,255,0.3); display:none;
+    touch-action:none;
+  }
+  #joyKnob{
+    position:absolute; left:50%; top:50%; width:54px; height:54px; margin:-27px 0 0 -27px;
+    border-radius:50%; background:rgba(155,48,255,0.55); border:2px solid rgba(255,255,255,0.7);
+    box-shadow:0 0 14px rgba(190,110,255,0.6);
+  }
+  @media (pointer:coarse){ #touchLight{ display:flex; } #joyBase{ display:block; } }
   .credit{ color:#5a4a44; font-size:11px; letter-spacing:1px; text-align:center; }
 
   .board{ width:100%; max-width:360px; margin-top:4px; }
@@ -85,6 +97,25 @@
     border-radius:4px; padding:7px 10px;
   }
   .hint b{ color:var(--accent2); }
+
+  /* phone-screen tightening: reclaim vertical space so the stage itself stays as large as possible */
+  @media (max-width:480px){
+    body{ padding-block:12px; }
+    .wrap{ gap:8px; }
+    h1{ font-size:clamp(24px,9vw,34px); margin:2px 0 0; letter-spacing:2px; }
+    .sub{ display:none; }
+    .hud{ font-size:11px; }
+    .hint{ font-size:10.5px; padding:5px 8px; }
+    .credit{ display:none; }
+    .overlay{ padding:14px; gap:10px; }
+    .overlay img{ max-width:100px; }
+    .overlay p{ font-size:13px; }
+  }
+  @media (pointer:coarse) and (max-width:480px){
+    #joyBase{ width:92px; height:92px; }
+    #joyKnob{ width:42px; height:42px; margin:-21px 0 0 -21px; }
+    #touchLight{ width:60px; height:60px; font-size:9.5px; }
+  }
 </style>
 
 <div class="wrap">
@@ -100,6 +131,7 @@
 
   <div class="stage" id="stage">
     <canvas id="c" width="800" height="600"></canvas>
+    <div id="joyBase"><div id="joyKnob"></div></div>
     <div id="touchLight">HOLD<br>FOR<br>LIGHT</div>
 
     <div class="overlay" id="startOverlay">
@@ -112,7 +144,7 @@
         <b>Light a candle</b> — just walk into an unlit one. It catches instantly, no waiting.<br>
         <b>Goal</b> — light every candle in the room, then walk through the glowing door.<br><br>
         <b>Level 1 is an easy warm-up</b> — just 2 candles, she starts far away and moves slowly. It gets faster and darker from there.<br><br>
-        <span style="font-size:13px;">Touch controls: drag anywhere to move · hold the dial for light.</span>
+        <span style="font-size:13px;">On a phone: use the joystick in the bottom-left to move (your flashlight points the way you're walking), and hold the dial in the bottom-right to shine it.</span>
       </p>
       <button id="startBtn">LIGHT THE FIRST CANDLE</button>
       <div class="board" id="startBoardWrap">
@@ -163,6 +195,8 @@
   const hudBattery = document.getElementById('hudBattery');
   const hudTime = document.getElementById('hudTime');
   const touchLightBtn = document.getElementById('touchLight');
+  const joyBase = document.getElementById('joyBase');
+  const joyKnob = document.getElementById('joyKnob');
   const levelOverlay = document.getElementById('levelOverlay');
   const levelTitle = document.getElementById('levelTitle');
   const levelText = document.getElementById('levelText');
@@ -426,7 +460,8 @@
   let state = 'start'; // start | playing | jumpscare | level_complete | win_pending | lose_out | ended
   let level = 0, totalScore = 0, currentScore = 0, scoreSubmitted = false, causeOfDeath = 'princess';
   let player, princess, keys, mouse, flashlightOn, battery, candlesFound, midnightTimer, unwatchedTime, jumpT, lastTime, clock;
-  let touchTarget = null, touchLightHeld = false;
+  let touchLightHeld = false;
+  let joyActive = false, joyVec = {x:0,y:0}, joyTouchId = null, joyCenter = {x:0,y:0};
   let blockers = walls;
   let reaper = null, reaperTimer = 0, reaperSpawned = false, reaperFlash = 0;
 
@@ -450,7 +485,7 @@
   }
   function resetGame(){
     level = 0; totalScore = 0;
-    keys = {}; touchTarget = null; touchLightHeld = false;
+    keys = {}; touchLightHeld = false; joyActive = false; joyVec = {x:0,y:0};
     jumpT = 0; lastTime = null; clock = 0;
     resetLevel();
   }
@@ -501,20 +536,45 @@
   stage.addEventListener('mousedown', e=>{ if(e.target===canvas) flashlightOn = true; });
   window.addEventListener('mouseup', ()=>{ flashlightOn = false; });
 
-  // touch: drag on canvas to move, dedicated button to hold light
-  stage.addEventListener('touchmove', e=>{
-    const t = e.touches[0]; if(!t) return;
-    const r = stage.getBoundingClientRect();
-    touchTarget = { x:(t.clientX-r.left)*(W/r.width), y:(t.clientY-r.top)*(H/r.height) };
-    mouse = touchTarget;
-    e.preventDefault();
+  // touch: on-screen joystick to move+aim, dedicated button to hold light
+  function updateJoy(clientX, clientY){
+    const dx = clientX-joyCenter.x, dy = clientY-joyCenter.y;
+    const dist = Math.hypot(dx,dy);
+    const JOY_RADIUS = 45;
+    const clamped = Math.min(dist, JOY_RADIUS);
+    const ang = Math.atan2(dy,dx);
+    joyKnob.style.transform = `translate(${Math.cos(ang)*clamped}px, ${Math.sin(ang)*clamped}px)`;
+    if (dist > 8){
+      const mag = clamped/JOY_RADIUS;
+      joyVec = { x:Math.cos(ang)*mag, y:Math.sin(ang)*mag };
+    } else {
+      joyVec = { x:0, y:0 };
+    }
+  }
+  function endJoy(){
+    joyActive = false; joyTouchId = null; joyVec = {x:0,y:0};
+    joyKnob.style.transform = 'translate(0,0)';
+  }
+  joyBase.addEventListener('touchstart', e=>{
+    const t = e.changedTouches[0]; if (!t) return;
+    const r = joyBase.getBoundingClientRect();
+    joyCenter = { x:r.left+r.width/2, y:r.top+r.height/2 };
+    joyActive = true; joyTouchId = t.identifier;
+    updateJoy(t.clientX, t.clientY);
+    e.preventDefault(); e.stopPropagation();
   }, {passive:false});
-  stage.addEventListener('touchstart', e=>{
-    const t = e.touches[0]; if(!t) return;
-    const r = stage.getBoundingClientRect();
-    touchTarget = { x:(t.clientX-r.left)*(W/r.width), y:(t.clientY-r.top)*(H/r.height) };
+  window.addEventListener('touchmove', e=>{
+    if (!joyActive) return;
+    for (const t of e.changedTouches){
+      if (t.identifier===joyTouchId){ updateJoy(t.clientX, t.clientY); e.preventDefault(); }
+    }
+  }, {passive:false});
+  window.addEventListener('touchend', e=>{
+    for (const t of e.changedTouches) if (t.identifier===joyTouchId) endJoy();
   });
-  stage.addEventListener('touchend', ()=>{ touchTarget = null; });
+  window.addEventListener('touchcancel', e=>{
+    for (const t of e.changedTouches) if (t.identifier===joyTouchId) endJoy();
+  });
   touchLightBtn.addEventListener('touchstart', e=>{ touchLightHeld=true; flashlightOn=true; e.stopPropagation(); e.preventDefault();});
   touchLightBtn.addEventListener('touchend', e=>{ touchLightHeld=false; flashlightOn=false; e.stopPropagation(); e.preventDefault();});
 
@@ -620,15 +680,16 @@
     if (keys['KeyS']||keys['ArrowDown']) dy+=1;
     if (keys['KeyA']||keys['ArrowLeft']) dx-=1;
     if (keys['KeyD']||keys['ArrowRight']) dx+=1;
-    if (touchTarget){
-      const ddx = touchTarget.x-player.x, ddy = touchTarget.y-player.y;
-      const d = Math.hypot(ddx,ddy);
-      if (d>6){ dx = ddx/d; dy = ddy/d; }
-    }
+    if (joyActive && (joyVec.x!==0 || joyVec.y!==0)){ dx = joyVec.x; dy = joyVec.y; }
     const len = Math.hypot(dx,dy);
     if (len>0){ dx/=len; dy/=len; tryMove(player, dx*player.speed*dt, dy*player.speed*dt); }
 
-    player.angle = Math.atan2(mouse.y-player.y, mouse.x-player.x);
+    // aim: mouse on desktop, or the joystick's own direction on touch (flashlight points where you walk)
+    if (joyActive && (joyVec.x!==0 || joyVec.y!==0)){
+      player.angle = Math.atan2(joyVec.y, joyVec.x);
+    } else if (!joyActive) {
+      player.angle = Math.atan2(mouse.y-player.y, mouse.x-player.x);
+    }
 
     // flashlight battery
     if (flashlightOn && battery>0){
