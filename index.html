@@ -36,6 +36,7 @@
   .overlay img{ max-width:150px; border-radius:6px; box-shadow:0 0 30px rgba(255,45,45,.4); filter:contrast(1.05) saturate(.9); flex-shrink:0;}
   .overlay h2{ color:var(--accent); letter-spacing:2px; margin:0; font-size:clamp(20px,5vw,30px); font-family:'Creepster',cursive; font-weight:400;}
   .overlay p{ color:var(--muted); max-width:460px; font-size:14.5px; line-height:1.65; margin:0;}
+  .instrCompact{ display:none; }
   .walkStrip{ width:min(92%,380px); height:auto; aspect-ratio:10/7; flex-shrink:0; margin:-2px 0 2px; }
   button{
     font-family:'Crimson Text',Georgia,serif; font-size:15px; letter-spacing:2px; padding:12px 26px; border-radius:4px;
@@ -53,6 +54,7 @@
   .touchControls{
     display:none; width:100%; max-width:560px; justify-content:center; align-items:center; gap:56px;
     padding-bottom:calc(4px + env(safe-area-inset-bottom, 0px));
+    flex-shrink:0;
   }
   @media (pointer:coarse){ .touchControls{ display:flex; } }
   #touchLight{
@@ -116,24 +118,32 @@
   }
   .hint b{ color:var(--accent2); }
 
-  /* phone-screen tightening: reclaim vertical space so the stage itself stays as large as possible */
+  /* phone-screen tightening: the whole page must fit in one viewport, no page-level scroll —
+     the stage is a flex item sized by AVAILABLE HEIGHT (not full width), so it shrinks to
+     whatever's left after the fixed-size chrome (h1, hud, touch controls) takes its share */
   @media (max-width:480px){
-    body{ padding-block:8px; }
-    .wrap{ gap:6px; }
-    h1{ font-size:clamp(20px,8vw,28px); margin:0; letter-spacing:1.5px; }
+    html, body{ height:100%; }
+    body{ padding-block:6px; overflow:hidden; height:100dvh; }
+    .wrap{ height:100%; gap:6px; }
+    h1{ font-size:clamp(18px,7vw,24px); margin:0; letter-spacing:1.5px; flex-shrink:0; }
     .sub{ display:none; }
-    .hud{ font-size:10.5px; gap:6px; }
+    .hud{ font-size:10.5px; gap:6px; flex-shrink:0; }
     .meter{ width:70px; }
     .hint{ display:none; }
     .credit{ display:none; }
-    .overlay{ padding:10px; gap:8px; }
-    .overlay img{ max-width:80px; }
-    .overlay h2{ font-size:20px; }
-    .walkStrip{ width:min(96%,320px); }
+    .stage{ width:auto; max-width:100%; flex:1 1 0%; min-height:0; }
+    .overlay{ padding:8px; gap:6px; }
+    .cardPhoto{ display:none; }
+    .instrFull{ display:none; }
+    .instrCompact{ display:block; font-size:11.5px; line-height:1.45; color:var(--muted); max-width:320px; }
+    .overlay h2{ font-size:18px; margin:0; }
+    .walkStrip{ width:min(70%,220px); }
     .overlay p{ font-size:12px; line-height:1.5; }
-    button{ padding:9px 18px; font-size:13px; }
+    button{ padding:8px 16px; font-size:12.5px; }
+    #startBoardWrap{ display:none; }
     .board{ max-width:100%; }
     .board li{ padding:4px 8px; font-size:12px; }
+    #submitStatus{ min-height:0; }
   }
   @media (pointer:coarse) and (max-width:480px){
     .touchControls{ gap:28px; }
@@ -158,10 +168,10 @@
     <canvas id="c" width="600" height="800"></canvas>
 
     <div class="overlay" id="startOverlay">
-      <img src="card-straight.jpg" alt="the princess"/>
+      <img class="cardPhoto" src="card-straight.jpg" alt="the princess"/>
       <h2>SHE TURNS FOUR TONIGHT</h2>
       <canvas id="walkCanvas" class="walkStrip" width="380" height="266"></canvas>
-      <p style="text-align:left;">
+      <p class="instrFull" style="text-align:left;">
         <b>Move</b> — WASD or arrow keys<br>
         <b>Aim</b> — point your mouse<br>
         <b>Flashlight</b> — hold Space (or click). While it's on her, she can't move at all — but the meter drains.<br>
@@ -170,6 +180,9 @@
         <b>Past level 3</b> — she starts throwing cake, and later a burning cable. Neither can kill you outright, but a hit stuns you and burns your battery, so dodge them.<br><br>
         <b>Level 1 is an easy warm-up</b> — just 2 candles, she starts far away and moves slowly. It gets faster and darker from there.<br><br>
         <span style="font-size:13px;">On a phone: use the arrow buttons in the bottom-left to move. The dial in the bottom-right is your flashlight — hold and drag it to aim in any direction; let go to switch it off. Don't touch the dial and it just points the way you're walking.</span>
+      </p>
+      <p class="instrCompact">
+        <b>WASD/arrows</b> move · <b>mouse</b> aim · <b>Space</b> = flashlight (freezes her) · walk into candles to light them · dodge cake/cable past level 3
       </p>
       <button id="startBtn">LIGHT THE FIRST CANDLE</button>
       <div class="board" id="startBoardWrap">
