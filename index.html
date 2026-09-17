@@ -54,17 +54,21 @@
     user-select:none; -webkit-user-select:none;
     background:rgba(255,183,3,.15); border:2px solid var(--accent2); color:var(--accent2);
   }
-  #joyBase{
-    position:absolute; bottom:calc(14px + env(safe-area-inset-bottom, 0px)); left:14px; width:120px; height:120px; border-radius:50%;
-    background:rgba(255,255,255,0.06); border:2px solid rgba(255,255,255,0.3); display:none;
-    touch-action:none;
+  #dpad{
+    position:absolute; bottom:calc(14px + env(safe-area-inset-bottom, 0px)); left:14px;
+    display:none; grid-template-columns:repeat(3, 44px); grid-template-rows:repeat(3, 44px); gap:4px;
   }
-  #joyKnob{
-    position:absolute; left:50%; top:50%; width:54px; height:54px; margin:-27px 0 0 -27px;
-    border-radius:50%; background:rgba(155,48,255,0.55); border:2px solid rgba(255,255,255,0.7);
-    box-shadow:0 0 14px rgba(190,110,255,0.6);
+  .dbtn{
+    display:flex; align-items:center; justify-content:center; border-radius:8px;
+    background:rgba(155,48,255,0.28); border:2px solid rgba(200,140,255,0.65); color:#f0d9ff;
+    font-size:18px; user-select:none; -webkit-user-select:none; touch-action:none;
   }
-  @media (pointer:coarse){ #touchLight{ display:flex; } #joyBase{ display:block; } }
+  .dbtn.active{ background:rgba(155,48,255,0.55); }
+  #dpUp{ grid-column:2; grid-row:1; }
+  #dpLeft{ grid-column:1; grid-row:2; }
+  #dpRight{ grid-column:3; grid-row:2; }
+  #dpDown{ grid-column:2; grid-row:3; }
+  @media (pointer:coarse){ #touchLight{ display:flex; } #dpad{ display:grid; } }
   .credit{ color:#5a4a44; font-size:11px; letter-spacing:1px; text-align:center; }
 
   .board{ width:100%; max-width:360px; margin-top:4px; }
@@ -100,21 +104,26 @@
 
   /* phone-screen tightening: reclaim vertical space so the stage itself stays as large as possible */
   @media (max-width:480px){
-    body{ padding-block:12px; }
-    .wrap{ gap:8px; }
-    h1{ font-size:clamp(24px,9vw,34px); margin:2px 0 0; letter-spacing:2px; }
+    body{ padding-block:8px; }
+    .wrap{ gap:6px; }
+    h1{ font-size:clamp(20px,8vw,28px); margin:0; letter-spacing:1.5px; }
     .sub{ display:none; }
-    .hud{ font-size:11px; }
-    .hint{ font-size:10.5px; padding:5px 8px; }
+    .hud{ font-size:10.5px; gap:6px; }
+    .meter{ width:70px; }
+    .hint{ display:none; }
     .credit{ display:none; }
-    .overlay{ padding:14px; gap:10px; }
-    .overlay img{ max-width:100px; }
-    .overlay p{ font-size:13px; }
+    .overlay{ padding:10px; gap:8px; }
+    .overlay img{ max-width:80px; }
+    .overlay h2{ font-size:20px; }
+    .overlay p{ font-size:12px; line-height:1.5; }
+    button{ padding:9px 18px; font-size:13px; }
+    .board{ max-width:100%; }
+    .board li{ padding:4px 8px; font-size:12px; }
   }
   @media (pointer:coarse) and (max-width:480px){
-    #joyBase{ width:92px; height:92px; }
-    #joyKnob{ width:42px; height:42px; margin:-21px 0 0 -21px; }
-    #touchLight{ width:60px; height:60px; font-size:9.5px; }
+    #dpad{ grid-template-columns:repeat(3, 34px); grid-template-rows:repeat(3, 34px); }
+    .dbtn{ font-size:14px; border-radius:6px; }
+    #touchLight{ width:58px; height:58px; font-size:9.5px; }
   }
 </style>
 
@@ -131,7 +140,12 @@
 
   <div class="stage" id="stage">
     <canvas id="c" width="800" height="600"></canvas>
-    <div id="joyBase"><div id="joyKnob"></div></div>
+    <div id="dpad">
+      <div class="dbtn" id="dpUp">&#9650;</div>
+      <div class="dbtn" id="dpLeft">&#9664;</div>
+      <div class="dbtn" id="dpRight">&#9654;</div>
+      <div class="dbtn" id="dpDown">&#9660;</div>
+    </div>
     <div id="touchLight">HOLD<br>FOR<br>LIGHT</div>
 
     <div class="overlay" id="startOverlay">
@@ -144,7 +158,7 @@
         <b>Light a candle</b> — just walk into an unlit one. It catches instantly, no waiting.<br>
         <b>Goal</b> — light every candle in the room, then walk through the glowing door.<br><br>
         <b>Level 1 is an easy warm-up</b> — just 2 candles, she starts far away and moves slowly. It gets faster and darker from there.<br><br>
-        <span style="font-size:13px;">On a phone: use the joystick in the bottom-left to move (your flashlight points the way you're walking), and hold the dial in the bottom-right to shine it.</span>
+        <span style="font-size:13px;">On a phone: use the arrow buttons in the bottom-left to move (your flashlight points the way you're walking), and hold the dial in the bottom-right to shine it.</span>
       </p>
       <button id="startBtn">LIGHT THE FIRST CANDLE</button>
       <div class="board" id="startBoardWrap">
@@ -195,8 +209,10 @@
   const hudBattery = document.getElementById('hudBattery');
   const hudTime = document.getElementById('hudTime');
   const touchLightBtn = document.getElementById('touchLight');
-  const joyBase = document.getElementById('joyBase');
-  const joyKnob = document.getElementById('joyKnob');
+  const dpUp = document.getElementById('dpUp');
+  const dpDown = document.getElementById('dpDown');
+  const dpLeft = document.getElementById('dpLeft');
+  const dpRight = document.getElementById('dpRight');
   const levelOverlay = document.getElementById('levelOverlay');
   const levelTitle = document.getElementById('levelTitle');
   const levelText = document.getElementById('levelText');
@@ -461,7 +477,7 @@
   let level = 0, totalScore = 0, currentScore = 0, scoreSubmitted = false, causeOfDeath = 'princess';
   let player, princess, keys, mouse, flashlightOn, battery, candlesFound, midnightTimer, unwatchedTime, jumpT, lastTime, clock;
   let touchLightHeld = false;
-  let joyActive = false, joyVec = {x:0,y:0}, joyTouchId = null, joyCenter = {x:0,y:0};
+  let touchKeys = {up:false, down:false, left:false, right:false};
   let blockers = walls;
   let reaper = null, reaperTimer = 0, reaperSpawned = false, reaperFlash = 0;
 
@@ -485,7 +501,7 @@
   }
   function resetGame(){
     level = 0; totalScore = 0;
-    keys = {}; touchLightHeld = false; joyActive = false; joyVec = {x:0,y:0};
+    keys = {}; touchLightHeld = false; touchKeys = {up:false, down:false, left:false, right:false};
     jumpT = 0; lastTime = null; clock = 0;
     resetLevel();
   }
@@ -536,45 +552,16 @@
   stage.addEventListener('mousedown', e=>{ if(e.target===canvas) flashlightOn = true; });
   window.addEventListener('mouseup', ()=>{ flashlightOn = false; });
 
-  // touch: on-screen joystick to move+aim, dedicated button to hold light
-  function updateJoy(clientX, clientY){
-    const dx = clientX-joyCenter.x, dy = clientY-joyCenter.y;
-    const dist = Math.hypot(dx,dy);
-    const JOY_RADIUS = 45;
-    const clamped = Math.min(dist, JOY_RADIUS);
-    const ang = Math.atan2(dy,dx);
-    joyKnob.style.transform = `translate(${Math.cos(ang)*clamped}px, ${Math.sin(ang)*clamped}px)`;
-    if (dist > 8){
-      const mag = clamped/JOY_RADIUS;
-      joyVec = { x:Math.cos(ang)*mag, y:Math.sin(ang)*mag };
-    } else {
-      joyVec = { x:0, y:0 };
-    }
+  // touch: on-screen D-pad buttons (mirrors WASD directly), dedicated button to hold light
+  function bindDpadBtn(el, key){
+    el.addEventListener('touchstart', e=>{ touchKeys[key]=true; el.classList.add('active'); e.stopPropagation(); e.preventDefault(); }, {passive:false});
+    el.addEventListener('touchend', e=>{ touchKeys[key]=false; el.classList.remove('active'); e.stopPropagation(); e.preventDefault(); }, {passive:false});
+    el.addEventListener('touchcancel', e=>{ touchKeys[key]=false; el.classList.remove('active'); e.stopPropagation(); e.preventDefault(); }, {passive:false});
   }
-  function endJoy(){
-    joyActive = false; joyTouchId = null; joyVec = {x:0,y:0};
-    joyKnob.style.transform = 'translate(0,0)';
-  }
-  joyBase.addEventListener('touchstart', e=>{
-    const t = e.changedTouches[0]; if (!t) return;
-    const r = joyBase.getBoundingClientRect();
-    joyCenter = { x:r.left+r.width/2, y:r.top+r.height/2 };
-    joyActive = true; joyTouchId = t.identifier;
-    updateJoy(t.clientX, t.clientY);
-    e.preventDefault(); e.stopPropagation();
-  }, {passive:false});
-  window.addEventListener('touchmove', e=>{
-    if (!joyActive) return;
-    for (const t of e.changedTouches){
-      if (t.identifier===joyTouchId){ updateJoy(t.clientX, t.clientY); e.preventDefault(); }
-    }
-  }, {passive:false});
-  window.addEventListener('touchend', e=>{
-    for (const t of e.changedTouches) if (t.identifier===joyTouchId) endJoy();
-  });
-  window.addEventListener('touchcancel', e=>{
-    for (const t of e.changedTouches) if (t.identifier===joyTouchId) endJoy();
-  });
+  bindDpadBtn(dpUp, 'up');
+  bindDpadBtn(dpDown, 'down');
+  bindDpadBtn(dpLeft, 'left');
+  bindDpadBtn(dpRight, 'right');
   touchLightBtn.addEventListener('touchstart', e=>{ touchLightHeld=true; flashlightOn=true; e.stopPropagation(); e.preventDefault();});
   touchLightBtn.addEventListener('touchend', e=>{ touchLightHeld=false; flashlightOn=false; e.stopPropagation(); e.preventDefault();});
 
@@ -676,18 +663,19 @@
 
     // movement
     let dx=0, dy=0;
-    if (keys['KeyW']||keys['ArrowUp']) dy-=1;
-    if (keys['KeyS']||keys['ArrowDown']) dy+=1;
-    if (keys['KeyA']||keys['ArrowLeft']) dx-=1;
-    if (keys['KeyD']||keys['ArrowRight']) dx+=1;
-    if (joyActive && (joyVec.x!==0 || joyVec.y!==0)){ dx = joyVec.x; dy = joyVec.y; }
+    if (keys['KeyW']||keys['ArrowUp']||touchKeys.up) dy-=1;
+    if (keys['KeyS']||keys['ArrowDown']||touchKeys.down) dy+=1;
+    if (keys['KeyA']||keys['ArrowLeft']||touchKeys.left) dx-=1;
+    if (keys['KeyD']||keys['ArrowRight']||touchKeys.right) dx+=1;
+    const rawDx = dx, rawDy = dy;
     const len = Math.hypot(dx,dy);
     if (len>0){ dx/=len; dy/=len; tryMove(player, dx*player.speed*dt, dy*player.speed*dt); }
 
-    // aim: mouse on desktop, or the joystick's own direction on touch (flashlight points where you walk)
-    if (joyActive && (joyVec.x!==0 || joyVec.y!==0)){
-      player.angle = Math.atan2(joyVec.y, joyVec.x);
-    } else if (!joyActive) {
+    // aim: mouse on desktop, or the D-pad's own direction on touch (flashlight points where you walk)
+    const usingDpad = touchKeys.up||touchKeys.down||touchKeys.left||touchKeys.right;
+    if (usingDpad){
+      player.angle = Math.atan2(rawDy, rawDx);
+    } else {
       player.angle = Math.atan2(mouse.y-player.y, mouse.x-player.x);
     }
 
