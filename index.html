@@ -1,0 +1,1585 @@
+<meta charset="UTF-8">
+<title>SHE TURNS FOUR</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Creepster&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+  :root{
+    --bg:#0a0708; --panel:#15100f; --ink:#e8dcd0; --muted:#a9948a;
+    --accent:#ff2d2d; --accent2:#ffb703; --line:#3a2a26;
+  }
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Crimson Text',Georgia,serif; margin:0; padding-block:24px;
+    min-height:100%; display:flex; flex-direction:column; align-items:center;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ width:100%; max-width:840px; padding:0 16px; display:flex; flex-direction:column; align-items:center; gap:14px;}
+  h1{
+    font-family:'Creepster',cursive; font-size:clamp(32px,8vw,58px); letter-spacing:4px; text-align:center; margin:6px 0 0;
+    color:var(--accent); text-shadow:0 0 18px rgba(255,45,45,.55), 0 0 2px #000; font-weight:400;
+    text-wrap:balance;
+  }
+  .sub{ color:var(--muted); text-align:center; max-width:560px; line-height:1.6; font-size:15.5px; margin:0;}
+  .stage{
+    position:relative; width:100%; max-width:560px; aspect-ratio:600/800;
+    background:#000; border:2px solid var(--line); border-radius:6px; overflow:hidden;
+    box-shadow:0 0 40px rgba(255,45,45,.12), inset 0 0 60px rgba(0,0,0,.8);
+    touch-action:none;
+  }
+  canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .overlay{
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:safe center;
+    gap:16px; text-align:center; padding:24px; background:rgba(5,3,3,.88); backdrop-filter:blur(2px);
+    overflow-y:auto; -webkit-overflow-scrolling:touch;
+  }
+  .overlay img{ max-width:150px; border-radius:6px; box-shadow:0 0 30px rgba(255,45,45,.4); filter:contrast(1.05) saturate(.9); flex-shrink:0;}
+  .overlay h2{ color:var(--accent); letter-spacing:2px; margin:0; font-size:clamp(20px,5vw,30px); font-family:'Creepster',cursive; font-weight:400;}
+  .overlay p{ color:var(--muted); max-width:460px; font-size:14.5px; line-height:1.65; margin:0;}
+  .walkStrip{ width:min(92%,380px); height:auto; aspect-ratio:10/7; flex-shrink:0; margin:-2px 0 2px; }
+  button{
+    font-family:'Crimson Text',Georgia,serif; font-size:15px; letter-spacing:2px; padding:12px 26px; border-radius:4px;
+    border:1px solid var(--accent); background:transparent; color:var(--ink); cursor:pointer;
+    transition:background .15s, color .15s;
+  }
+  button:hover{ background:var(--accent); color:#100; }
+  .hud{
+    width:100%; max-width:560px; display:flex; justify-content:space-between; align-items:center;
+    font-size:13px; letter-spacing:1px; color:var(--muted); gap:10px; flex-wrap:wrap;
+  }
+  .hud b{ color:var(--ink); }
+  .meter{ width:110px; height:8px; border:1px solid var(--line); border-radius:4px; overflow:hidden; display:inline-block; vertical-align:middle; margin-left:6px;}
+  .meter i{ display:block; height:100%; background:var(--accent2); }
+  .touchControls{
+    display:none; width:100%; max-width:560px; justify-content:center; align-items:center; gap:56px;
+    padding-bottom:calc(4px + env(safe-area-inset-bottom, 0px));
+  }
+  @media (pointer:coarse){ .touchControls{ display:flex; } }
+  #touchLight{
+    position:relative;
+    width:96px; height:96px; border-radius:50%;
+    font-size:11px; letter-spacing:1px; display:flex; align-items:center; justify-content:center; text-align:center;
+    user-select:none; -webkit-user-select:none; touch-action:none;
+    background:rgba(255,183,3,.15); border:2px solid var(--accent2); color:var(--accent2);
+  }
+  #touchLight.dragging #touchLightHint{ opacity:0; }
+  #touchLightHint{ transition:opacity .1s; pointer-events:none; }
+  #touchLightKnob{
+    position:absolute; width:40px; height:40px; border-radius:50%;
+    left:50%; top:50%; transform:translate(-50%,-50%);
+    background:rgba(255,183,3,.4); border:2px solid var(--accent2);
+    pointer-events:none;
+  }
+  #dpad{
+    display:grid; grid-template-columns:repeat(3, 58px); grid-template-rows:repeat(3, 58px); gap:6px;
+  }
+  .dbtn{
+    display:flex; align-items:center; justify-content:center; border-radius:10px;
+    background:rgba(155,48,255,0.28); border:2px solid rgba(200,140,255,0.65); color:#f0d9ff;
+    font-size:24px; user-select:none; -webkit-user-select:none; touch-action:none;
+  }
+  .dbtn.active{ background:rgba(155,48,255,0.55); }
+  #dpUp{ grid-column:2; grid-row:1; }
+  #dpLeft{ grid-column:1; grid-row:2; }
+  #dpRight{ grid-column:3; grid-row:2; }
+  #dpDown{ grid-column:2; grid-row:3; }
+  .credit{ color:#5a4a44; font-size:11px; letter-spacing:1px; text-align:center; }
+
+  .board{ width:100%; max-width:360px; margin-top:4px; }
+  .board h3{
+    font-family:'Creepster',cursive; font-weight:400; letter-spacing:2px; color:var(--accent2);
+    font-size:16px; margin:0 0 6px; text-align:center;
+  }
+  .board ol{ list-style:none; margin:0; padding:0; border:1px solid var(--line); border-radius:4px; overflow:hidden; }
+  .board li{
+    display:flex; justify-content:space-between; gap:10px; padding:6px 12px; font-size:13.5px;
+    background:rgba(255,255,255,0.02);
+  }
+  .board li:nth-child(even){ background:rgba(255,255,255,0.045); }
+  .board li:first-child{ color:var(--accent2); }
+  .board .bn{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .board .bs{ font-variant-numeric:tabular-nums; color:var(--ink); flex-shrink:0; }
+  .scoreLine{ font-size:15px; letter-spacing:1px; color:var(--ink); }
+  .scoreLine b{ color:var(--accent2); font-size:20px; }
+  .nameRow{ display:flex; gap:8px; width:100%; max-width:360px; }
+  .nameRow input{
+    flex:1; min-width:0; font-family:inherit; font-size:14px; background:#150f0e; color:var(--ink);
+    border:1px solid var(--line); border-radius:4px; padding:10px 12px; letter-spacing:1px;
+  }
+  .nameRow input:focus{ outline:none; border-color:var(--accent2); }
+  .nameRow button{ padding:10px 18px; font-size:13px; white-space:nowrap; }
+  #submitStatus{ font-size:12px; color:var(--muted); min-height:14px; }
+  .hint{
+    width:100%; max-width:560px; text-align:center; font-size:12px; letter-spacing:.5px;
+    color:var(--muted); background:rgba(255,255,255,0.03); border:1px solid var(--line);
+    border-radius:4px; padding:7px 10px;
+  }
+  .hint b{ color:var(--accent2); }
+
+  /* phone-screen tightening: reclaim vertical space so the stage itself stays as large as possible */
+  @media (max-width:480px){
+    body{ padding-block:8px; }
+    .wrap{ gap:6px; }
+    h1{ font-size:clamp(20px,8vw,28px); margin:0; letter-spacing:1.5px; }
+    .sub{ display:none; }
+    .hud{ font-size:10.5px; gap:6px; }
+    .meter{ width:70px; }
+    .hint{ display:none; }
+    .credit{ display:none; }
+    .overlay{ padding:10px; gap:8px; }
+    .overlay img{ max-width:80px; }
+    .overlay h2{ font-size:20px; }
+    .walkStrip{ width:min(96%,320px); }
+    .overlay p{ font-size:12px; line-height:1.5; }
+    button{ padding:9px 18px; font-size:13px; }
+    .board{ max-width:100%; }
+    .board li{ padding:4px 8px; font-size:12px; }
+  }
+  @media (pointer:coarse) and (max-width:480px){
+    .touchControls{ gap:28px; }
+    #dpad{ grid-template-columns:repeat(3, 50px); grid-template-rows:repeat(3, 50px); }
+    .dbtn{ font-size:20px; }
+    #touchLight{ width:84px; height:84px; font-size:11px; }
+  }
+</style>
+
+<div class="wrap">
+  <h1>SHE TURNS FOUR</h1>
+  <p class="sub">It's her birthday, and it happens in ten rounds — each one a little worse than the last. Light every candle, then reach the door. She only moves when you're not watching her.</p>
+
+  <div class="hud">
+    <div>Candles: <b id="hudCandles">0/2</b></div>
+    <div>Light <span class="meter"><i id="hudBattery" style="width:100%"></i></span></div>
+    <div id="hudTime">Level 1</div>
+  </div>
+  <div class="hint"><b>WASD</b> move · <b>mouse</b> aims · hold <b>SPACE</b> for flashlight (freezes her) · walk into an unlit candle to light it</div>
+
+  <div class="stage" id="stage">
+    <canvas id="c" width="600" height="800"></canvas>
+
+    <div class="overlay" id="startOverlay">
+      <img src="card-straight.jpg" alt="the princess"/>
+      <h2>SHE TURNS FOUR TONIGHT</h2>
+      <canvas id="walkCanvas" class="walkStrip" width="380" height="266"></canvas>
+      <p style="text-align:left;">
+        <b>Move</b> — WASD or arrow keys<br>
+        <b>Aim</b> — point your mouse<br>
+        <b>Flashlight</b> — hold Space (or click). While it's on her, she can't move at all — but the meter drains.<br>
+        <b>Light a candle</b> — just walk into an unlit one. It catches instantly, no waiting.<br>
+        <b>Goal</b> — light every candle in the room, then walk through the glowing door.<br>
+        <b>Past level 3</b> — she starts throwing cake, and later a burning cable. Neither can kill you outright, but a hit stuns you and burns your battery, so dodge them.<br><br>
+        <b>Level 1 is an easy warm-up</b> — just 2 candles, she starts far away and moves slowly. It gets faster and darker from there.<br><br>
+        <span style="font-size:13px;">On a phone: use the arrow buttons in the bottom-left to move. The dial in the bottom-right is your flashlight — hold and drag it to aim in any direction; let go to switch it off. Don't touch the dial and it just points the way you're walking.</span>
+      </p>
+      <button id="startBtn">LIGHT THE FIRST CANDLE</button>
+      <div class="board" id="startBoardWrap">
+        <h3>TOP SURVIVORS</h3>
+        <ol id="startBoardList"><li>loading…</li></ol>
+      </div>
+    </div>
+
+    <div class="overlay" id="levelOverlay" style="display:none;">
+      <h2 id="levelTitle">LEVEL COMPLETE</h2>
+      <canvas id="danceCanvas" class="walkStrip" width="380" height="266"></canvas>
+      <p id="levelText"></p>
+      <button id="continueBtn">CONTINUE</button>
+    </div>
+
+    <div class="overlay" id="endOverlay" style="display:none;">
+      <img id="endImg" src="card-straight.jpg" alt="the princess"/>
+      <h2 id="endTitle">GAME OVER</h2>
+      <p id="endText"></p>
+      <div class="scoreLine">Score: <b id="finalScore">0</b></div>
+      <div class="nameRow">
+        <input id="nameInput" maxlength="20" placeholder="your name" autocomplete="off"/>
+        <button id="submitScoreBtn">SUBMIT</button>
+      </div>
+      <div id="submitStatus"></div>
+      <div class="board" id="endBoardWrap">
+        <h3>TOP SURVIVORS</h3>
+        <ol id="endBoardList"><li>loading…</li></ol>
+      </div>
+      <button id="retryBtn">TRY AGAIN</button>
+    </div>
+  </div>
+
+  <div class="touchControls" id="touchControls">
+    <div id="dpad">
+      <div class="dbtn" id="dpUp">&#9650;</div>
+      <div class="dbtn" id="dpLeft">&#9664;</div>
+      <div class="dbtn" id="dpRight">&#9654;</div>
+      <div class="dbtn" id="dpDown">&#9660;</div>
+    </div>
+    <div id="touchLight"><span id="touchLightHint">HOLD &amp;<br>DRAG TO<br>AIM LIGHT</span><div id="touchLightKnob"></div></div>
+  </div>
+
+  <p class="credit">a small horror game made from a real birthday card, drawn by KM</p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  // the darkness mask is built on its own offscreen buffer, then stamped onto the main canvas
+  // in one source-over draw — cutting "holes" with destination-out directly on the main canvas
+  // would erase the already-drawn scene (player, princess, candles) instead of just revealing it
+  const maskCanvas = document.createElement('canvas');
+  maskCanvas.width = W; maskCanvas.height = H;
+  const maskCtx = maskCanvas.getContext('2d');
+  const stage = document.getElementById('stage');
+  const startOverlay = document.getElementById('startOverlay');
+  const walkCanvas = document.getElementById('walkCanvas');
+  const wctx = walkCanvas.getContext('2d');
+  const danceCanvas = document.getElementById('danceCanvas');
+  const dctx = danceCanvas.getContext('2d');
+  const endOverlay = document.getElementById('endOverlay');
+  const endTitle = document.getElementById('endTitle');
+  const endText = document.getElementById('endText');
+  const hudCandles = document.getElementById('hudCandles');
+  const hudBattery = document.getElementById('hudBattery');
+  const hudTime = document.getElementById('hudTime');
+  const touchControls = document.getElementById('touchControls');
+  const touchLightBtn = document.getElementById('touchLight');
+  const touchLightKnob = document.getElementById('touchLightKnob');
+  const dpUp = document.getElementById('dpUp');
+  const dpDown = document.getElementById('dpDown');
+  const dpLeft = document.getElementById('dpLeft');
+  const dpRight = document.getElementById('dpRight');
+  const levelOverlay = document.getElementById('levelOverlay');
+  const levelTitle = document.getElementById('levelTitle');
+  const levelText = document.getElementById('levelText');
+  const continueBtn = document.getElementById('continueBtn');
+  const finalScoreEl = document.getElementById('finalScore');
+  const nameInput = document.getElementById('nameInput');
+  const submitScoreBtn = document.getElementById('submitScoreBtn');
+  const submitStatus = document.getElementById('submitStatus');
+  const startBoardList = document.getElementById('startBoardList');
+  const endBoardList = document.getElementById('endBoardList');
+
+  // ---------- image + sprite crop (cut out: paper removed, only ink survives) ----------
+  const img = new Image();
+  img.src = "Messenger_creation_FD88BBDC-B500-418B-B437-A968789A55A8.jpeg";
+  let spriteCanvas = document.createElement('canvas');
+  let spriteReady = false;
+  // fraction of source image containing just the figure, with margin so hands/hair are never hard-clipped
+  const CROP = { x:0.233, y:0.262, w:0.417, h:0.478 };
+  const EYE_L = {x:0.400, y:0.137}, EYE_R = {x:0.616, y:0.131}; // relative to cropped sprite
+  function cutoutSprite(sctx, w, h){
+    // never let a failed/degenerate cutout hide the whole character — worst case, keep the plain crop visible
+    let frame;
+    try { frame = sctx.getImageData(0,0,w,h); }
+    catch(e){ console.warn('cutout skipped (canvas read blocked, e.g. file:// origin):', e); return; }
+    const d = frame.data;
+    // hard binary cutout, no feathered/partial alpha — a white pixel at low opacity over
+    // a black room reads as dim gray, not white, so every surviving pixel goes fully opaque
+    const inkThresh = 150;
+    let opaqueCount = 0;
+    for (let i=0;i<d.length;i+=4){
+      const lum = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+      if (lum <= inkThresh){
+        d[i] = 255; d[i+1] = 255; d[i+2] = 255; d[i+3] = 255;
+        opaqueCount++;
+      } else {
+        d[i+3] = 0;
+      }
+    }
+    if (opaqueCount < (w*h)*0.01){
+      console.warn('cutout skipped (near-empty result — crop/threshold mismatch), keeping original crop');
+      return;
+    }
+    sctx.putImageData(frame,0,0);
+  }
+  img.onload = function(){
+    const sx = CROP.x*img.naturalWidth, sy = CROP.y*img.naturalHeight;
+    const sw = CROP.w*img.naturalWidth, sh = CROP.h*img.naturalHeight;
+    const outW = 240, outH = Math.round(outW*sh/sw);
+    spriteCanvas.width = outW; spriteCanvas.height = outH;
+    const sctx = spriteCanvas.getContext('2d');
+    sctx.drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
+    try { cutoutSprite(sctx, outW, outH); }
+    catch(e){ console.warn('cutout failed, showing plain crop instead:', e); }
+    spriteReady = true;
+  };
+  img.onerror = function(e){ console.error('princess image failed to load:', e); };
+
+  // ---------- audio ----------
+  let ac = null, droneNodes = null, masterGain = null;
+  function initAudio(){
+    if (ac) return;
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = ac.createGain(); masterGain.gain.value = 0.5; masterGain.connect(ac.destination);
+    const o1 = ac.createOscillator(); o1.type='sine'; o1.frequency.value=54;
+    const o2 = ac.createOscillator(); o2.type='sine'; o2.frequency.value=57.5;
+    const g = ac.createGain(); g.gain.value = 0.06;
+    const lfo = ac.createOscillator(); lfo.frequency.value = 0.13;
+    const lfoGain = ac.createGain(); lfoGain.gain.value = 0.03;
+    lfo.connect(lfoGain); lfoGain.connect(g.gain);
+    o1.connect(g); o2.connect(g); g.connect(masterGain);
+    // extra dissonant layer, silent until later levels fade it in
+    const o3 = ac.createOscillator(); o3.type='sine'; o3.frequency.value=54*1.414;
+    const g3 = ac.createGain(); g3.gain.value = 0;
+    o3.connect(g3); g3.connect(masterGain);
+    o1.start(); o2.start(); lfo.start(); o3.start();
+    droneNodes = {o1,o2,g,lfo,lfoGain,o3,g3};
+  }
+  // each level gets its own drone/theme: distinct interval, tremolo rate and dissonant-layer ratio,
+  // not just "the same drone but darker" — so all ten rounds feel like different soundtracks
+  const AMBIENT_PARAMS = [
+    {f1:54, f2:57.5, gain:0.06,  lfoRate:0.13, lfoDepth:0.03, o3Gain:0,    o3Ratio:1.414}, // 1 morning
+    {f1:48, f2:53,   gain:0.075, lfoRate:0.19, lfoDepth:0.045,o3Gain:0.02, o3Ratio:1.414}, // 2 evening
+    {f1:40, f2:46,   gain:0.09,  lfoRate:0.27, lfoDepth:0.06, o3Gain:0.045,o3Ratio:1.414}, // 3 midnight
+    {f1:36, f2:42,   gain:0.105, lfoRate:0.34, lfoDepth:0.07, o3Gain:0.06, o3Ratio:1.259}, // 4 witching hour
+    {f1:33, f2:39,   gain:0.115, lfoRate:0.5,  lfoDepth:0.09, o3Gain:0.07, o3Ratio:1.68},  // 5 sugar rush
+    {f1:30, f2:35,   gain:0.125, lfoRate:0.3,  lfoDepth:0.08, o3Gain:0.08, o3Ratio:1.9},   // 6 blood moon
+    {f1:28, f2:34,   gain:0.13,  lfoRate:0.22, lfoDepth:0.05, o3Gain:0.09, o3Ratio:2.0},   // 7 hollow hour
+    {f1:26, f2:33,   gain:0.14,  lfoRate:0.6,  lfoDepth:0.11, o3Gain:0.10, o3Ratio:1.414}, // 8 screaming walls
+    {f1:24, f2:29,   gain:0.145, lfoRate:0.17, lfoDepth:0.04, o3Gain:0.11, o3Ratio:1.5},   // 9 the long dark
+    {f1:22, f2:27,   gain:0.155, lfoRate:0.45, lfoDepth:0.10, o3Gain:0.13, o3Ratio:1.414}  // 10 the last candle
+  ];
+  function setAmbientLevel(lvl){
+    if (!ac || !droneNodes) return;
+    const p = AMBIENT_PARAMS[lvl] || AMBIENT_PARAMS[AMBIENT_PARAMS.length-1];
+    const t = ac.currentTime;
+    droneNodes.o1.frequency.setTargetAtTime(p.f1, t, 1.2);
+    droneNodes.o2.frequency.setTargetAtTime(p.f2, t, 1.2);
+    droneNodes.o3.frequency.setTargetAtTime(p.f1*p.o3Ratio, t, 1.2);
+    droneNodes.g.gain.setTargetAtTime(p.gain, t, 1.5);
+    droneNodes.lfo.frequency.setTargetAtTime(p.lfoRate, t, 1.5);
+    droneNodes.lfoGain.gain.setTargetAtTime(p.lfoDepth, t, 1.5);
+    droneNodes.g3.gain.setTargetAtTime(p.o3Gain, t, 2);
+  }
+  function levelStartSting(lvl){
+    if (lvl===1){ beep(220,0.4,'sawtooth',0.15,0); }
+    else if (lvl===2){ noiseBurst(0.35,0.25); beep(130,0.7,'sawtooth',0.22,0.05); }
+    else if (lvl===3){ noiseBurst(0.25,0.3); beep(300,0.3,'square',0.15,0); beep(90,0.5,'sawtooth',0.25,0.08); }
+    else if (lvl===4){ beep(180,0.5,'sawtooth',0.2,0); beep(60,0.8,'sawtooth',0.3,0.1); }
+    else if (lvl===5){ bellToll(); noiseBurst(0.4,0.3); }
+    else if (lvl===6){ beep(150,0.6,'square',0.2,0); noiseBurst(0.3,0.25); }
+    else if (lvl===7){ noiseBurst(0.5,0.4); beep(100,0.6,'sawtooth',0.3,0.05); beep(50,0.9,'sawtooth',0.25,0.1); }
+    else if (lvl===8){ bellToll(); beep(70,0.7,'sawtooth',0.25,0.1); }
+    else if (lvl===9){ bellToll(); noiseBurst(0.6,0.45); beep(45,1.0,'sawtooth',0.35,0.15); }
+  }
+  function bellToll(){
+    if (!ac) return;
+    const t0 = ac.currentTime;
+    [110,220,330].forEach((f,i)=>{
+      const o=ac.createOscillator(); o.type='sine'; o.frequency.value=f;
+      const g=ac.createGain(); g.gain.setValueAtTime(0.0001,t0);
+      g.gain.exponentialRampToValueAtTime(0.28/(i+1), t0+0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0+2.2);
+      o.connect(g); g.connect(masterGain);
+      o.start(t0); o.stop(t0+2.3);
+    });
+  }
+  function reaperWarnSound(){ bellToll(); }
+  function reaperCatchSound(){ bellToll(); noiseBurst(0.8,0.6); beep(60,1.0,'sawtooth',0.4,0.1); }
+  function beep(freq, dur, type, vol, delay){
+    if (!ac) return;
+    const t0 = ac.currentTime + (delay||0);
+    const o = ac.createOscillator(); o.type = type||'sine'; o.frequency.setValueAtTime(freq, t0);
+    const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol||0.3, t0+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    o.connect(g); g.connect(masterGain);
+    o.start(t0); o.stop(t0+dur+0.05);
+  }
+  function heartbeat(){ beep(70,0.12,'sine',0.35,0); beep(55,0.16,'sine',0.3,0.14); }
+  function chime(freq){ beep(freq,0.5,'triangle',0.25,0); }
+  function noiseBurst(dur, vol){
+    if (!ac) return;
+    const bufferSize = Math.floor(ac.sampleRate*dur);
+    const buf = ac.createBuffer(1, bufferSize, ac.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i=0;i<bufferSize;i++) data[i] = (Math.random()*2-1) * (1 - i/bufferSize);
+    const src = ac.createBufferSource(); src.buffer = buf;
+    const bp = ac.createBiquadFilter(); bp.type='bandpass'; bp.frequency.setValueAtTime(1800, ac.currentTime);
+    bp.frequency.exponentialRampToValueAtTime(200, ac.currentTime+dur);
+    const g = ac.createGain(); g.gain.value = vol||0.6;
+    src.connect(bp); bp.connect(g); g.connect(masterGain);
+    src.start();
+  }
+  function jumpscareSound(){
+    noiseBurst(0.6, 0.7);
+    beep(180,0.5,'sawtooth',0.4,0.02);
+    beep(90,0.7,'sawtooth',0.35,0.05);
+  }
+  function winSound(){ chime(392); beep(523,0.6,'triangle',0.2,0.15); beep(659,0.8,'triangle',0.18,0.3); }
+  function cakeThrowSound(){ beep(240,0.12,'square',0.18,0); }
+  function cakeHitSound(){ noiseBurst(0.25,0.35); beep(140,0.2,'square',0.2,0); beep(90,0.3,'sawtooth',0.15,0.05); }
+  function cableThrowSound(){ noiseBurst(0.15,0.2); beep(180,0.15,'sawtooth',0.2,0); }
+  function cableHitSound(){ noiseBurst(0.5,0.5); beep(90,0.35,'sawtooth',0.3,0); beep(50,0.5,'sawtooth',0.25,0.08); }
+
+  // ---------- leaderboard (Supabase) ----------
+  const SUPABASE_URL = "https://xojzhrffvjcfkihgpemw.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_4-nG79up1J_XTgleP-i7Og_5Oy2l873";
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function renderBoard(listEl, rows){
+    listEl.innerHTML = '';
+    if (!rows || rows.length===0){
+      listEl.innerHTML = '<li>No scores yet — be the first.</li>';
+      return;
+    }
+    rows.forEach(r=>{
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="bn">${escapeHtml(r.name)}</span><span class="bs">${r.score}</span>`;
+      listEl.appendChild(li);
+    });
+  }
+  async function fetchTopScores(){
+    try{
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?select=name,score&order=score.desc&limit=10`, {
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+      });
+      if (!res.ok) throw new Error('bad response');
+      return await res.json();
+    } catch(e){ console.warn('leaderboard fetch failed', e); return null; }
+  }
+  async function submitScoreToBoard(name, score){
+    try{
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/scores`, {
+        method:'POST',
+        headers:{
+          apikey: SUPABASE_ANON_KEY, Authorization:`Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type':'application/json', Prefer:'return=minimal'
+        },
+        body: JSON.stringify([{ name: name.slice(0,20), score: Math.max(0,Math.min(10000,Math.round(score))) }])
+      });
+      return res.ok;
+    } catch(e){ console.warn('score submit failed', e); return false; }
+  }
+  async function refreshBoards(){
+    const rows = await fetchTopScores();
+    renderBoard(startBoardList, rows);
+    renderBoard(endBoardList, rows);
+  }
+
+  // ---------- level geometry ----------
+  // shared house layout: outer border + one wide divider with a big open doorway — two simple rooms, easy to read and move through.
+  const walls = [
+    {x:0,y:0,w:W,h:12},{x:0,y:H-12,w:W,h:12},{x:0,y:0,w:12,h:H},{x:W-12,y:0,w:12,h:H},
+  ];
+  const ALL_CANDLES = [
+    {x:100,y:120},{x:250,y:340},{x:80,y:700},{x:520,y:120},{x:520,y:640}
+  ];
+  const doorPos = {x:60,y:H-70,w:60,h:44};
+  const playerStart = {x:W-70,y:120};
+
+  // ten rounds, each harder than the last. Past level 3 something else wakes up (the reaper);
+  // level 4 onward she also starts throwing cake, and level 8 onward a burning cable joins it —
+  // neither can kill you outright, but a hit stuns you and tears a chunk out of your battery.
+  const LEVELS = [
+    {
+      label:'LEVEL 1 · MORNING',
+      candles:[ALL_CANDLES[0], ALL_CANDLES[3]],
+      timeLimit:150, lightTime:0.4, lightRadius:46,
+      princessSpeed:24, princessStart:{x:500,y:700},
+      watchAngle:0.75, watchDist:620,
+      battery:20, batteryDrain:0.45, snapAfter:5.5,
+      obstacles:[],
+      intro:"Two candles, and she's still half asleep in the far room. Just get used to holding E next to a candle."
+    },
+    {
+      label:'LEVEL 2 · EVENING',
+      candles:[ALL_CANDLES[0],ALL_CANDLES[1],ALL_CANDLES[2],ALL_CANDLES[3]],
+      timeLimit:100, lightTime:0.7, lightRadius:36,
+      princessSpeed:42, princessStart:{x:60,y:60},
+      watchAngle:0.5, watchDist:480,
+      battery:11, batteryDrain:1, snapAfter:2.6,
+      obstacles:[{x:180,y:560,w:34,h:34}],
+      intro:"She's awake now, and faster. Keep her pinned in your flashlight or she'll close the gap. Watch for furniture in the dark."
+    },
+    {
+      label:'LEVEL 3 · MIDNIGHT',
+      candles:ALL_CANDLES,
+      timeLimit:90, lightTime:0.9, lightRadius:30,
+      princessSpeed:56, princessStart:{x:60,y:60},
+      watchAngle:0.42, watchDist:430,
+      battery:9, batteryDrain:1.15, snapAfter:1.9,
+      obstacles:[{x:180,y:560,w:34,h:34},{x:470,y:200,w:36,h:36}],
+      reaperDelay:14, reaperSpeed:50, reaperStart:{x:W-40,y:H-40},
+      intro:"Midnight. All five candles, and she's done waiting. Something else wakes up in this room too — flashlights don't stop it. Just keep moving."
+    },
+    {
+      label:'LEVEL 4 · WITCHING HOUR',
+      candles:ALL_CANDLES,
+      timeLimit:75, lightTime:0.9, lightRadius:28,
+      princessSpeed:66, princessStart:{x:60,y:60},
+      watchAngle:0.36, watchDist:400,
+      battery:8, batteryDrain:1.3, snapAfter:1.6,
+      obstacles:[{x:180,y:560,w:34,h:34},{x:470,y:200,w:36,h:36},{x:300,y:400,w:36,h:36}],
+      reaperDelay:10, reaperSpeed:60, reaperStart:{x:W-40,y:H-40},
+      cakeEnabled:true, cakeInterval:6.5, cakeSpeed:200, cakeColor:'#b46bd6',
+      intro:"The witching hour. She's faster still, your light barely holds her, and He's not waiting as long this time. She's also found something to throw — dodge it, don't just eat it."
+    },
+    {
+      label:'LEVEL 5 · SUGAR RUSH',
+      candles:ALL_CANDLES,
+      timeLimit:65, lightTime:0.9, lightRadius:26,
+      princessSpeed:76, princessStart:{x:60,y:60},
+      watchAngle:0.32, watchDist:370,
+      battery:7, batteryDrain:1.45, snapAfter:1.35,
+      obstacles:[{x:180,y:560,w:34,h:34},{x:470,y:200,w:36,h:36},{x:300,y:400,w:36,h:36},{x:470,y:680,w:34,h:34}],
+      reaperDelay:7, reaperSpeed:68, reaperStart:{x:W-40,y:H-40},
+      cakeEnabled:true, cakeInterval:6, cakeSpeed:215, cakeColor:'#ff6fa5',
+      intro:"Almost no time, almost no light, and both of them are already awake. And she keeps throwing that cake."
+    },
+    {
+      label:'LEVEL 6 · BLOOD MOON',
+      candles:ALL_CANDLES,
+      timeLimit:58, lightTime:0.9, lightRadius:25,
+      princessSpeed:84, princessStart:{x:60,y:60},
+      watchAngle:0.30, watchDist:350,
+      battery:6.5, batteryDrain:1.55, snapAfter:1.25,
+      obstacles:[{x:180,y:560,w:34,h:34},{x:470,y:200,w:36,h:36},{x:300,y:400,w:36,h:36},{x:470,y:680,w:34,h:34},{x:350,y:150,w:34,h:34}],
+      reaperDelay:6, reaperSpeed:74, reaperStart:{x:W-40,y:H-40},
+      cakeEnabled:true, cakeInterval:5.5, cakeSpeed:230, cakeColor:'#c81e3a',
+      intro:"The moon's gone red outside. Nothing about this room is getting easier to read."
+    },
+    {
+      label:'LEVEL 7 · HOLLOW HOUR',
+      candles:ALL_CANDLES,
+      timeLimit:52, lightTime:0.9, lightRadius:24,
+      princessSpeed:90, princessStart:{x:60,y:60},
+      watchAngle:0.28, watchDist:335,
+      battery:6, batteryDrain:1.65, snapAfter:1.15,
+      obstacles:[{x:180,y:560,w:34,h:34},{x:470,y:200,w:36,h:36},{x:300,y:400,w:36,h:36},{x:470,y:680,w:34,h:34},{x:350,y:150,w:34,h:34},{x:150,y:450,w:36,h:36}],
+      reaperDelay:5.5, reaperSpeed:78, reaperStart:{x:W-40,y:H-40},
+      cakeEnabled:true, cakeInterval:5, cakeSpeed:245, cakeColor:'#5a7d5a',
+      intro:"There's less floor to stand on and less time to stand on it. Watch what she's holding — after this, it isn't just cake anymore."
+    },
+    {
+      label:'LEVEL 8 · SCREAMING WALLS',
+      candles:ALL_CANDLES,
+      timeLimit:48, lightTime:0.9, lightRadius:23,
+      princessSpeed:96, princessStart:{x:60,y:60},
+      watchAngle:0.27, watchDist:320,
+      battery:5.6, batteryDrain:1.75, snapAfter:1.05,
+      obstacles:[{x:180,y:560,w:34,h:34},{x:470,y:200,w:36,h:36},{x:300,y:400,w:36,h:36},{x:470,y:680,w:34,h:34},{x:350,y:150,w:34,h:34},{x:150,y:450,w:36,h:36},{x:400,y:550,w:34,h:34}],
+      reaperDelay:5, reaperSpeed:82, reaperStart:{x:W-40,y:H-40},
+      cakeEnabled:true, cakeInterval:4.5, cakeSpeed:260, cakeColor:'#ff8c3a',
+      cableEnabled:true, cableInterval:9, cableSpeed:250,
+      intro:"You can hear it in the walls now. He's close, she's closer, and your light barely reaches past your own hand. And now she's found something on fire to throw."
+    },
+    {
+      label:'LEVEL 9 · THE LONG DARK',
+      candles:ALL_CANDLES,
+      timeLimit:44, lightTime:0.9, lightRadius:22,
+      princessSpeed:102, princessStart:{x:60,y:60},
+      watchAngle:0.26, watchDist:305,
+      battery:5.2, batteryDrain:1.85, snapAfter:0.95,
+      obstacles:[{x:180,y:560,w:34,h:34},{x:470,y:200,w:36,h:36},{x:300,y:400,w:36,h:36},{x:470,y:680,w:34,h:34},{x:350,y:150,w:34,h:34},{x:150,y:450,w:36,h:36},{x:400,y:550,w:34,h:34},{x:250,y:650,w:36,h:36}],
+      reaperDelay:4.5, reaperSpeed:86, reaperStart:{x:W-40,y:H-40},
+      cakeEnabled:true, cakeInterval:4, cakeSpeed:275, cakeColor:'#3a4fae',
+      cableEnabled:true, cableInterval:8, cableSpeed:265,
+      intro:"One more after this. If you're still standing, you've earned it. Mind the burning cable — a hit costs you far more than the cake does."
+    },
+    {
+      label:'LEVEL 10 · THE LAST CANDLE',
+      candles:ALL_CANDLES,
+      timeLimit:40, lightTime:0.9, lightRadius:21,
+      princessSpeed:108, princessStart:{x:60,y:60},
+      watchAngle:0.25, watchDist:290,
+      battery:4.8, batteryDrain:1.95, snapAfter:0.85,
+      obstacles:[{x:180,y:560,w:34,h:34},{x:470,y:200,w:36,h:36},{x:300,y:400,w:36,h:36},{x:470,y:680,w:34,h:34},{x:350,y:150,w:34,h:34},{x:150,y:450,w:36,h:36},{x:400,y:550,w:34,h:34},{x:250,y:650,w:36,h:36},{x:520,y:400,w:34,h:34}],
+      reaperDelay:4, reaperSpeed:90, reaperStart:{x:W-40,y:H-40},
+      cakeEnabled:true, cakeInterval:3.5, cakeSpeed:290, cakeColor:'#8b0000',
+      cableEnabled:true, cableInterval:7, cableSpeed:280,
+      intro:"This is the last one. Almost no time, almost no light, and neither of them is waiting anymore."
+    }
+  ];
+
+  // ---------- state ----------
+  let state = 'start'; // start | playing | jumpscare | level_complete | win_pending | lose_out | ended
+  let level = 0, totalScore = 0, currentScore = 0, scoreSubmitted = false, causeOfDeath = 'princess';
+  let player, princess, keys, mouse, flashlightOn, battery, candlesFound, midnightTimer, unwatchedTime, jumpT, lastTime, clock;
+  let touchLightHeld = false;
+  let touchLightAngle = 0;
+  let touchKeys = {up:false, down:false, left:false, right:false};
+  let blockers = walls;
+  let reaper = null, reaperTimer = 0, reaperSpawned = false, reaperFlash = 0;
+  const THROW_ANIM_DUR = 0.4; // how long her throw-lunge pose plays, in seconds
+  let cakes = [], cakeCooldown = 0, playerStunT = 0, cakeHitFlash = 0;
+  let cables = [], cableCooldown = 0;
+
+  function resetLevel(){
+    const cfg = LEVELS[level];
+    player = {x:playerStart.x, y:playerStart.y, r:12, speed:195, angle:0};
+    princess = {x:cfg.princessStart.x, y:cfg.princessStart.y, speed:cfg.princessSpeed, angryPulse:0, walkPhase:0, watched:false, throwT:0, throwDir:0};
+    mouse = {x:W/2,y:H/2};
+    flashlightOn = false;
+    battery = cfg.battery;
+    candlesFound = [];
+    midnightTimer = cfg.timeLimit;
+    unwatchedTime = 0;
+    blockers = walls.concat(cfg.obstacles||[]);
+    reaperSpawned = false;
+    reaperFlash = 0;
+    reaper = cfg.reaperStart ? {x:cfg.reaperStart.x, y:cfg.reaperStart.y, speed:cfg.reaperSpeed, walkPhase:0} : null;
+    reaperTimer = cfg.reaperDelay || 0;
+    cakes = [];
+    cakeCooldown = cfg.cakeInterval || 0;
+    cables = [];
+    cableCooldown = cfg.cableInterval || 0;
+    playerStunT = 0;
+    cakeHitFlash = 0;
+    setAmbientLevel(level);
+    updateHud();
+  }
+  function resetGame(){
+    level = 0; totalScore = 0;
+    keys = {}; touchLightHeld = false; touchKeys = {up:false, down:false, left:false, right:false};
+    jumpT = 0; lastTime = null; clock = 0;
+    resetLevel();
+  }
+
+  // the D-pad + light joystick are gameplay-only: hidden on the start/level/end overlays,
+  // shown the moment there's actually a room to move around in
+  function setTouchControlsVisible(v){ touchControls.style.display = v ? '' : 'none'; }
+  setTouchControlsVisible(false);
+
+  function updateHud(){
+    const cfg = LEVELS[level];
+    hudCandles.textContent = candlesFound.length + '/' + cfg.candles.length;
+    hudBattery.style.width = Math.max(0, (battery/cfg.battery*100)) + '%';
+    const secondsLeft = Math.max(0, Math.ceil(midnightTimer));
+    hudTime.textContent = cfg.label + ' — ' + secondsLeft + 's to midnight';
+  }
+
+  function rectsOverlap(a,b){
+    return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
+  }
+  function circleRectOverlap(cx,cy,cr,rect){
+    const nx = Math.max(rect.x, Math.min(cx, rect.x+rect.w));
+    const ny = Math.max(rect.y, Math.min(cy, rect.y+rect.h));
+    const dx = cx-nx, dy = cy-ny;
+    return (dx*dx+dy*dy) < cr*cr;
+  }
+
+  function tryMove(entity, dx, dy){
+    const nx = entity.x+dx;
+    let blocked=false;
+    for (const w of blockers) if (circleRectOverlap(nx, entity.y, entity.r||10, w)) { blocked=true; break; }
+    if (!blocked) entity.x = nx;
+    const ny = entity.y+dy;
+    blocked=false;
+    for (const w of blockers) if (circleRectOverlap(entity.x, ny, entity.r||10, w)) { blocked=true; break; }
+    if (!blocked) entity.y = ny;
+  }
+
+  // ---------- input ----------
+  window.addEventListener('keydown', e=>{
+    keys[e.code]=true;
+    if (e.code==='Space'){ flashlightOn = true; e.preventDefault(); }
+  });
+  window.addEventListener('keyup', e=>{
+    keys[e.code]=false;
+    if (e.code==='Space'){ flashlightOn = false; }
+  });
+  stage.addEventListener('mousemove', e=>{
+    const r = stage.getBoundingClientRect();
+    mouse.x = (e.clientX-r.left) * (W/r.width);
+    mouse.y = (e.clientY-r.top) * (H/r.height);
+  });
+  stage.addEventListener('mousedown', e=>{ if(e.target===canvas) flashlightOn = true; });
+  window.addEventListener('mouseup', ()=>{ flashlightOn = false; });
+
+  // touch: on-screen D-pad buttons (mirrors WASD directly), dedicated button to hold light
+  function bindDpadBtn(el, key){
+    el.addEventListener('touchstart', e=>{ touchKeys[key]=true; el.classList.add('active'); e.stopPropagation(); e.preventDefault(); }, {passive:false});
+    el.addEventListener('touchend', e=>{ touchKeys[key]=false; el.classList.remove('active'); e.stopPropagation(); e.preventDefault(); }, {passive:false});
+    el.addEventListener('touchcancel', e=>{ touchKeys[key]=false; el.classList.remove('active'); e.stopPropagation(); e.preventDefault(); }, {passive:false});
+  }
+  bindDpadBtn(dpUp, 'up');
+  bindDpadBtn(dpDown, 'down');
+  bindDpadBtn(dpLeft, 'left');
+  bindDpadBtn(dpRight, 'right');
+  // touch: the flashlight dial doubles as an aim joystick — drag from its center to point the beam,
+  // independent of whichever way the D-pad is walking. Letting go snaps the knob back and kills the light.
+  const TOUCH_LIGHT_MAX = 28; // px the knob can travel from center before clamping
+  function updateTouchLightFromTouch(t){
+    const r = touchLightBtn.getBoundingClientRect();
+    const cx = r.left + r.width/2, cy = r.top + r.height/2;
+    const dx = t.clientX-cx, dy = t.clientY-cy;
+    const dist = Math.hypot(dx,dy);
+    touchLightAngle = Math.atan2(dy,dx);
+    const clamped = Math.min(dist, TOUCH_LIGHT_MAX);
+    const kx = Math.cos(touchLightAngle)*clamped, ky = Math.sin(touchLightAngle)*clamped;
+    touchLightKnob.style.transform = `translate(${kx-20}px, ${ky-20}px)`;
+  }
+  function resetTouchLightKnob(){ touchLightKnob.style.transform = 'translate(-50%,-50%)'; }
+  touchLightBtn.addEventListener('touchstart', e=>{
+    touchLightHeld=true; flashlightOn=true; touchLightBtn.classList.add('dragging');
+    updateTouchLightFromTouch(e.changedTouches[0]);
+    e.stopPropagation(); e.preventDefault();
+  }, {passive:false});
+  touchLightBtn.addEventListener('touchmove', e=>{
+    if (!touchLightHeld) return;
+    updateTouchLightFromTouch(e.changedTouches[0]);
+    e.stopPropagation(); e.preventDefault();
+  }, {passive:false});
+  function endTouchLightDrag(e){
+    touchLightHeld=false; flashlightOn=false; touchLightBtn.classList.remove('dragging');
+    resetTouchLightKnob();
+    e.stopPropagation(); e.preventDefault();
+  }
+  touchLightBtn.addEventListener('touchend', endTouchLightDrag, {passive:false});
+  touchLightBtn.addEventListener('touchcancel', endTouchLightDrag, {passive:false});
+
+  // ---------- game flow ----------
+  document.getElementById('startBtn').addEventListener('click', ()=>{
+    initAudio();
+    stopOpeningBeat();
+    resetGame();
+    startOverlay.style.display='none';
+    endOverlay.style.display='none';
+    state='playing';
+    setTouchControlsVisible(true);
+    requestAnimationFrame(loop);
+  });
+  document.getElementById('retryBtn').addEventListener('click', ()=>{
+    resetGame();
+    endOverlay.style.display='none';
+    state='playing';
+    setTouchControlsVisible(true);
+    requestAnimationFrame(loop);
+  });
+  continueBtn.addEventListener('click', ()=>{
+    level++;
+    resetLevel();
+    levelStartSting(level);
+    levelOverlay.style.display='none';
+    state='playing';
+    setTouchControlsVisible(true);
+  });
+  submitScoreBtn.addEventListener('click', async ()=>{
+    if (scoreSubmitted) return;
+    const name = (nameInput.value||'').trim().slice(0,20) || 'Anonymous';
+    localStorage.setItem('sheTurnsFourName', name);
+    submitScoreBtn.disabled = true;
+    submitStatus.textContent = 'Saving…';
+    const ok = await submitScoreToBoard(name, currentScore);
+    if (ok){
+      submitStatus.textContent = 'Saved to the leaderboard.';
+      scoreSubmitted = true;
+      await refreshBoards();
+    } else {
+      submitStatus.textContent = 'Could not save — check your connection.';
+      submitScoreBtn.disabled = false;
+    }
+  });
+
+  function triggerLose(cause){
+    causeOfDeath = cause;
+    totalScore += candlesFound.length*150; // partial credit for the round in progress
+    state='jumpscare'; jumpT=0;
+    setTouchControlsVisible(false);
+    if (cause==='reaper') reaperCatchSound(); else jumpscareSound();
+  }
+  function triggerLevelComplete(){
+    state='level_complete';
+    setTouchControlsVisible(false);
+    chime(784);
+    const next = LEVELS[level+1];
+    levelTitle.textContent = 'LEVEL ' + (level+1) + ' COMPLETE';
+    levelText.textContent = next.intro;
+    levelOverlay.style.display='flex';
+    levelCompleteDance();
+  }
+  function triggerWin(){
+    state='win_pending'; jumpT=0;
+    setTouchControlsVisible(false);
+    winSound();
+  }
+
+  function showEnd(won){
+    endOverlay.style.display='flex';
+    currentScore = totalScore;
+    finalScoreEl.textContent = totalScore;
+    if (won){
+      endTitle.textContent = 'YOU ESCAPED';
+      endText.textContent = 'You made it out before midnight, all ten rounds done. Somewhere behind you, something is still humming happy birthday to itself.';
+    } else {
+      endTitle.textContent = 'GAME OVER';
+      if (causeOfDeath==='reaper'){
+        endText.textContent = "He found you. No flashlight trick stops Death. You reached " + LEVELS[level].label + ".";
+      } else if (causeOfDeath==='timeout'){
+        endText.textContent = "Midnight came and went before the last candle caught. You reached " + LEVELS[level].label + ".";
+      } else {
+        endText.textContent = 'She just wanted to show you her balloon. You reached ' + LEVELS[level].label + '.';
+      }
+    }
+    nameInput.value = localStorage.getItem('sheTurnsFourName') || '';
+    submitStatus.textContent = '';
+    scoreSubmitted = false;
+    submitScoreBtn.disabled = false;
+    refreshBoards();
+  }
+
+  // ---------- update ----------
+  function update(dt){
+    if (state !== 'playing') return;
+    const cfg = LEVELS[level];
+
+    clock += dt;
+    if (reaperFlash>0) reaperFlash = Math.max(0, reaperFlash-dt*1.6);
+    if (playerStunT>0) playerStunT = Math.max(0, playerStunT-dt);
+    if (cakeHitFlash>0) cakeHitFlash = Math.max(0, cakeHitFlash-dt*1.8);
+    if (princess.throwT>0) princess.throwT = Math.max(0, princess.throwT-dt);
+    midnightTimer -= dt;
+    if (midnightTimer <= 0){
+      causeOfDeath = 'timeout';
+      totalScore += candlesFound.length*150;
+      state='lose_out'; setTouchControlsVisible(false); jumpscareSound(); return;
+    }
+
+    // movement — stunned (just hit by a thrown cake/cable) means slower for a moment, not stopped
+    let dx=0, dy=0;
+    if (keys['KeyW']||keys['ArrowUp']||touchKeys.up) dy-=1;
+    if (keys['KeyS']||keys['ArrowDown']||touchKeys.down) dy+=1;
+    if (keys['KeyA']||keys['ArrowLeft']||touchKeys.left) dx-=1;
+    if (keys['KeyD']||keys['ArrowRight']||touchKeys.right) dx+=1;
+    const rawDx = dx, rawDy = dy;
+    const len = Math.hypot(dx,dy);
+    const moveSpeed = player.speed * (playerStunT>0 ? 0.45 : 1);
+    if (len>0){ dx/=len; dy/=len; tryMove(player, dx*moveSpeed*dt, dy*moveSpeed*dt); }
+
+    // aim priority: the light joystick (when actively dragged) always wins, then the D-pad's own
+    // walking direction on touch, then the mouse on desktop
+    const usingDpad = touchKeys.up||touchKeys.down||touchKeys.left||touchKeys.right;
+    if (touchLightHeld){
+      player.angle = touchLightAngle;
+    } else if (usingDpad){
+      player.angle = Math.atan2(rawDy, rawDx);
+    } else {
+      player.angle = Math.atan2(mouse.y-player.y, mouse.x-player.x);
+    }
+
+    // flashlight battery
+    if (flashlightOn && battery>0){
+      battery = Math.max(0, battery-dt*cfg.batteryDrain);
+      if (battery<=0) flashlightOn=false;
+    } else if (!flashlightOn && battery<cfg.battery){
+      battery = Math.min(cfg.battery, battery+dt*cfg.batteryDrain*0.6);
+    }
+
+    // is princess illuminated?
+    const toPx = princess.x-player.x, toPy = princess.y-player.y;
+    const dist = Math.hypot(toPx,toPy);
+    const angleTo = Math.atan2(toPy,toPx);
+    let angleDiff = Math.atan2(Math.sin(angleTo-player.angle), Math.cos(angleTo-player.angle));
+    const watched = flashlightOn && Math.abs(angleDiff) < cfg.watchAngle && dist < cfg.watchDist;
+    princess.watched = watched;
+
+    if (watched){
+      unwatchedTime = 0;
+      princess.angryPulse = Math.max(0, princess.angryPulse-dt*2);
+    } else {
+      unwatchedTime += dt;
+      princess.angryPulse = Math.min(1, princess.angryPulse+dt*0.4);
+      const speed = princess.speed * (1 + Math.min(1.6, unwatchedTime*0.12));
+      const ang = Math.atan2(player.y-princess.y, player.x-princess.x);
+      princess.x += Math.cos(ang)*speed*dt;
+      princess.y += Math.sin(ang)*speed*dt;
+      princess.walkPhase += dt*(6+speed*0.05);
+      // snap-closer when ignored too long (weeping-angel style)
+      if (unwatchedTime > cfg.snapAfter){
+        princess.x += Math.cos(ang)*speed*dt*3;
+        princess.y += Math.sin(ang)*speed*dt*3;
+      }
+    }
+
+    if (dist < 220 && !watched && Math.random()<dt*0.6) heartbeat();
+
+    if (dist < 26){ triggerLose('princess'); return; }
+
+    // the reaper: level 3 only, arrives after a countdown, cannot be stopped by light
+    if (reaper){
+      if (!reaperSpawned){
+        reaperTimer -= dt;
+        if (reaperTimer <= 0){
+          reaperSpawned = true;
+          reaperFlash = 0.4;
+          reaperWarnSound();
+        }
+      } else {
+        const rang = Math.atan2(player.y-reaper.y, player.x-reaper.x);
+        tryMove(reaper, Math.cos(rang)*reaper.speed*dt, Math.sin(rang)*reaper.speed*dt);
+        reaper.walkPhase += dt*4;
+        const rdist = Math.hypot(player.x-reaper.x, player.y-reaper.y);
+        if (rdist < 220 && Math.random()<dt*0.9) heartbeat();
+        if (rdist < 24){ triggerLose('reaper'); return; }
+      }
+    }
+
+    // thrown cake: past level 3, she lobs it while active (never while frozen in your light).
+    // it can't kill you, but a hit stuns you and burns a chunk of your battery.
+    if (cfg.cakeEnabled){
+      if (!watched){
+        cakeCooldown -= dt;
+        if (cakeCooldown <= 0){
+          const cang = Math.atan2(player.y-princess.y, player.x-princess.x);
+          cakes.push({x:princess.x, y:princess.y, vx:Math.cos(cang)*cfg.cakeSpeed, vy:Math.sin(cang)*cfg.cakeSpeed, r:11, spin:Math.random()*Math.PI*2});
+          cakeCooldown = cfg.cakeInterval * (0.85+Math.random()*0.3);
+          princess.throwT = THROW_ANIM_DUR; princess.throwDir = cang;
+          cakeThrowSound();
+        }
+      }
+      for (let i=cakes.length-1;i>=0;i--){
+        const k = cakes[i];
+        k.x += k.vx*dt; k.y += k.vy*dt; k.spin += dt*9;
+        if (k.x<-20||k.x>W+20||k.y<-20||k.y>H+20){ cakes.splice(i,1); continue; }
+        if (Math.hypot(player.x-k.x, player.y-k.y) < player.r+k.r){
+          cakes.splice(i,1);
+          playerStunT = 0.9; cakeHitFlash = 1;
+          battery = Math.max(0, battery - cfg.battery*0.35);
+          if (battery<=0) flashlightOn=false;
+          cakeHitSound();
+        }
+      }
+    }
+
+    // burning cable: past level 7, a nastier throw joins the cake — still non-lethal, but costs far more.
+    if (cfg.cableEnabled){
+      if (!watched){
+        cableCooldown -= dt;
+        if (cableCooldown <= 0){
+          const cang = Math.atan2(player.y-princess.y, player.x-princess.x);
+          cables.push({x:princess.x, y:princess.y, vx:Math.cos(cang)*cfg.cableSpeed, vy:Math.sin(cang)*cfg.cableSpeed, r:10, spin:Math.random()*Math.PI*2});
+          cableCooldown = cfg.cableInterval * (0.85+Math.random()*0.3);
+          princess.throwT = THROW_ANIM_DUR; princess.throwDir = cang;
+          cableThrowSound();
+        }
+      }
+      for (let i=cables.length-1;i>=0;i--){
+        const k = cables[i];
+        k.x += k.vx*dt; k.y += k.vy*dt; k.spin += dt*14;
+        if (k.x<-20||k.x>W+20||k.y<-20||k.y>H+20){ cables.splice(i,1); continue; }
+        if (Math.hypot(player.x-k.x, player.y-k.y) < player.r+k.r){
+          cables.splice(i,1);
+          playerStunT = 1.3; cakeHitFlash = 1;
+          battery = Math.max(0, battery - cfg.battery*0.55);
+          if (battery<=0) flashlightOn=false;
+          cableHitSound();
+        }
+      }
+    }
+
+    // candles: light instantly the moment you walk into one
+    for (const c of cfg.candles){
+      if (candlesFound.includes(c)) continue;
+      const d2 = Math.hypot(player.x-c.x, player.y-c.y);
+      if (d2 < cfg.lightRadius){
+        candlesFound.push(c);
+        chime(660+candlesFound.length*40);
+      }
+    }
+
+    // door
+    if (candlesFound.length===cfg.candles.length && circleRectOverlap(player.x,player.y,player.r,doorPos)){
+      const timeBonus = Math.round(midnightTimer*3);
+      totalScore += candlesFound.length*150 + timeBonus;
+      if (level < LEVELS.length-1) triggerLevelComplete(); else triggerWin();
+    }
+
+    updateHud();
+  }
+
+  // ---------- draw ----------
+  function drawWalls(){
+    ctx.fillStyle = '#5a453c';
+    for (const w of walls) ctx.fillRect(w.x,w.y,w.w,w.h);
+    ctx.strokeStyle = '#8a6a56';
+    ctx.lineWidth = 2;
+    for (const w of walls) ctx.strokeRect(w.x,w.y,w.w,w.h);
+    ctx.lineWidth = 1;
+  }
+  function drawObstacles(list){
+    for (const o of list){
+      ctx.fillStyle = '#3d2b1f';
+      ctx.fillRect(o.x,o.y,o.w,o.h);
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      ctx.fillRect(o.x,o.y,o.w,3);
+      ctx.strokeStyle = '#6b4a30';
+      ctx.strokeRect(o.x,o.y,o.w,o.h);
+    }
+  }
+  function drawFloor(){
+    ctx.fillStyle = '#0f0b0a';
+    ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle = 'rgba(60,45,40,0.25)';
+    for (let x=0;x<W;x+=40){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+    for (let y=0;y<H;y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+  }
+  function drawCandle(c, lit){
+    ctx.save(); ctx.translate(c.x,c.y);
+    ctx.fillStyle = '#d8cbb8'; ctx.fillRect(-3,-2,6,14);
+    if (lit){
+      // fully lit: room-lighting halo behind an actual animated flame shape
+      const flick = 0.92+Math.random()*0.08;
+      const sway = Math.sin(clock*6.5 + c.x*0.3 + c.y*0.2)*2.2;
+      ctx.fillStyle = 'rgba(255,215,140,0.4)';
+      ctx.beginPath(); ctx.arc(0,-9,70*flick,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,200,110,0.6)';
+      ctx.beginPath(); ctx.arc(0,-9,40*flick,0,Math.PI*2); ctx.fill();
+      ctx.shadowColor = '#ffcf7a'; ctx.shadowBlur = 24;
+      // a real teardrop flame shape, layered outer-orange -> inner blue-white, with a gentle flicker sway
+      function flameLayer(halfWidth, height, yTip, color){
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.quadraticCurveTo(-halfWidth,-height*0.45, sway*(height/22), -height*flick+yTip);
+        ctx.quadraticCurveTo(halfWidth,-height*0.45, 0,0);
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+      }
+      flameLayer(7.5, 22, 0, 'rgba(255,120,20,0.95)');
+      flameLayer(5.5, 16, -2, 'rgba(255,180,55,0.95)');
+      flameLayer(3.5, 10, -3, 'rgba(255,230,140,0.95)');
+      flameLayer(1.8, 6, -4, 'rgba(210,235,255,0.95)');
+      ctx.shadowBlur = 0;
+    } else {
+      // not yet lit: a soft pale pre-glow so it's easy to spot from a distance, clearly not burning yet
+      const pulse = 0.5+0.5*Math.sin(clock*2.4 + c.x*0.1 + c.y*0.1);
+      ctx.fillStyle = `rgba(190,170,255,${0.18+0.12*pulse})`;
+      ctx.beginPath(); ctx.arc(0,-8,13+5*pulse,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = `rgba(220,205,255,${0.35+0.2*pulse})`;
+      ctx.beginPath(); ctx.arc(0,-9,3+1.5*pulse,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawDoor(active){
+    ctx.fillStyle = active ? '#ffb703' : '#3a2a26';
+    ctx.fillRect(doorPos.x,doorPos.y,doorPos.w,doorPos.h);
+    if (active){
+      ctx.shadowColor='#ffb703'; ctx.shadowBlur=20;
+      ctx.strokeStyle='#fff5da'; ctx.strokeRect(doorPos.x,doorPos.y,doorPos.w,doorPos.h);
+      ctx.shadowBlur=0;
+    }
+  }
+  function drawCake(k, color){
+    ctx.save();
+    ctx.translate(k.x,k.y);
+    ctx.rotate(k.spin);
+    ctx.fillStyle = '#6b4423';
+    ctx.beginPath(); ctx.arc(0,0,k.r,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = color || '#e8d0e0';
+    ctx.beginPath(); ctx.arc(0,-2,k.r*0.72,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.beginPath(); ctx.arc(-2,-4,2.2,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(0,0,k.r,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+  function drawCable(k){
+    const ang = Math.atan2(k.vy,k.vx);
+    ctx.save();
+    ctx.translate(k.x,k.y);
+    ctx.rotate(ang);
+    ctx.strokeStyle = '#161616'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-k.r*1.9,0);
+    ctx.quadraticCurveTo(-k.r*0.9, Math.sin(k.spin*3)*4, 0,0);
+    ctx.stroke();
+    const flick = 0.85+Math.random()*0.15;
+    ctx.shadowColor = '#ff8a2a'; ctx.shadowBlur = 14;
+    ctx.fillStyle = 'rgba(255,140,40,0.95)';
+    ctx.beginPath(); ctx.ellipse(k.r*0.4,0,7*flick,5*flick,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,220,120,0.95)';
+    ctx.beginPath(); ctx.ellipse(k.r*0.55,0,3.5*flick,2.6*flick,0,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  }
+  // a quick expanding ring at the moment of release — reads as an "oomph" on the throw,
+  // drawn in world space (unrotated) so it stays a clean circle regardless of her lunge tilt
+  function drawThrowBurst(){
+    if (!princess || princess.throwT<=0) return;
+    const age = THROW_ANIM_DUR - princess.throwT;
+    if (age > 0.22) return;
+    const ringR = 8 + age*150;
+    const ringA = Math.max(0, 0.5 - age*2.2);
+    if (ringA <= 0) return;
+    ctx.save();
+    ctx.strokeStyle = `rgba(255,255,255,${ringA})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(princess.x, princess.y-40, ringR, 0, Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+  function drawPlayer(){
+    ctx.save();
+    ctx.translate(player.x, player.y);
+    const pulse = 0.75+0.25*Math.sin(clock*1.6); // slow, dull pulse — not a bright strobe
+    const vr = player.r*1.6; // drawn visual size — bigger than the actual (unchanged) collision radius
+    // just one small, faint glow sitting close to the body — the ring below is what needs to
+    // read clearly, so this stays a dull pulse, not a big bright orb
+    ctx.globalCompositeOperation = 'lighter';
+    let pg2 = ctx.createRadialGradient(0,0,2,0,0,vr*2.2);
+    pg2.addColorStop(0, `rgba(225,160,255,${0.28*pulse})`); pg2.addColorStop(1,'rgba(225,160,255,0)');
+    ctx.fillStyle = pg2; ctx.beginPath(); ctx.arc(0,0,vr*2.2,0,Math.PI*2); ctx.fill();
+    let pg3 = ctx.createRadialGradient(0,0,1,0,0,vr*1.2);
+    pg3.addColorStop(0, `rgba(240,210,255,${0.45*pulse})`); pg3.addColorStop(1,'rgba(240,210,255,0)');
+    ctx.fillStyle = pg3; ctx.beginPath(); ctx.arc(0,0,vr*1.2,0,Math.PI*2); ctx.fill();
+    // everything above is glow — it must always end up UNDER the solid body and its ring,
+    // so the ring stays crisp and unmissable no matter how bright the bloom gets
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 14;
+    ctx.fillStyle = '#e070ff';
+    ctx.beginPath(); ctx.arc(0,0,vr,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(0,0,vr*0.5,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // dark contrast ring first so the white ring on top reads clearly even against the glow
+    ctx.strokeStyle = 'rgba(10,5,15,0.65)'; ctx.lineWidth = 6.5;
+    ctx.beginPath(); ctx.arc(0,0,vr,0,Math.PI*2); ctx.stroke();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(0,0,vr,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+  function drawPrincess(){
+    if (!spriteReady) return;
+    const w = 88, h = w*spriteCanvas.height/spriteCanvas.width;
+    // she's a paper-doll cutout: bobs and sways while creeping, holds dead still while watched
+    const bob = princess.watched ? Math.sin(clock*1.3)*1.2 : Math.sin(princess.walkPhase)*4;
+    const tilt = princess.watched ? 0 : Math.sin(princess.walkPhase*0.5)*0.08;
+    const jitter = princess.angryPulse*4;
+    const jx = (Math.random()-0.5)*jitter, jy=(Math.random()-0.5)*jitter;
+
+    // throwing: a quick forward lunge toward whoever she's aiming at, snapping back — sells the
+    // throw without needing separate arm art on the paper-doll cutout
+    let throwLeanX=0, throwLeanY=0, throwTilt=0, throwSquash=1;
+    if (princess.throwT>0){
+      const p = 1 - (princess.throwT/THROW_ANIM_DUR); // 0 right at release, 1 at end of the pose
+      const kick = Math.sin(Math.min(1,p)*Math.PI); // eases up, then back down
+      throwLeanX = Math.cos(princess.throwDir)*kick*11;
+      throwLeanY = Math.sin(princess.throwDir)*kick*7;
+      throwTilt = kick*0.22;
+      throwSquash = 1 - kick*0.12;
+    }
+
+    ctx.save();
+    ctx.translate(princess.x+jx+throwLeanX, princess.y - bob + jy + throwLeanY);
+    ctx.rotate(tilt+throwTilt);
+    ctx.scale(1/throwSquash, throwSquash);
+
+    // dull, slowly pulsing presence-glow — just enough to read as "glowing" from a distance,
+    // never bright enough to compete with the outline below
+    const veryAngry = princess.angryPulse>0.85;
+    const auraPulse = 0.6+0.4*Math.sin(clock*1.1);
+    let aura = ctx.createRadialGradient(0,-h*0.55,2,0,-h*0.55,w*1.15);
+    aura.addColorStop(0, veryAngry ? `rgba(255,210,205,${0.28*auraPulse})` : `rgba(255,250,235,${0.22*auraPulse})`);
+    aura.addColorStop(1, 'rgba(255,250,235,0)');
+    ctx.fillStyle = aura;
+    ctx.beginPath(); ctx.arc(0,-h*0.55,w*1.15,0,Math.PI*2); ctx.fill();
+
+    // aura glow must stay under the outline below — draw order, not z-index, is what keeps her linework crisp
+    // strong, crisp white outline — thickened well beyond the source line so her body reads clearly at a glance
+    ctx.shadowColor = 'rgba(255,252,240,1)';
+    ctx.shadowBlur = 16;
+    ctx.globalAlpha = 0.85;
+    const offs = [[-2,0],[2,0],[0,-2],[0,2],[-1.5,-1.5],[1.5,-1.5],[-1.5,1.5],[1.5,1.5],[-1,0],[1,0],[0,-1],[0,1]];
+    for (const [ox,oy] of offs) ctx.drawImage(spriteCanvas, -w/2+ox, -h+oy, w, h);
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 4;
+    ctx.drawImage(spriteCanvas, -w/2, -h, w, h);
+    ctx.drawImage(spriteCanvas, -w/2, -h, w, h);
+    ctx.shadowBlur = 0;
+
+    if (princess.angryPulse>0.5){
+      // dull, barely-there ink tint, masked to the drawn linework only — a hint of red, not a wash
+      ctx.globalCompositeOperation = 'source-atop';
+      ctx.fillStyle = `rgba(180,30,30,${Math.min(0.12, (princess.angryPulse-0.5)*0.24)})`;
+      ctx.fillRect(-w/2,-h,w,h);
+      ctx.globalCompositeOperation = 'source-over';
+      // small, dull glowing eyes — a subtle accent, not a bright beacon
+      const ex1 = -w/2 + EYE_L.x*w, ey1 = -h + EYE_L.y*h;
+      const ex2 = -w/2 + EYE_R.x*w, ey2 = -h + EYE_R.y*h;
+      const glow = 1.5 + princess.angryPulse*1.5;
+      ctx.fillStyle = `rgba(220,60,60,${0.25+0.25*princess.angryPulse})`;
+      ctx.shadowColor='#a02020'; ctx.shadowBlur = 4+princess.angryPulse*4;
+      ctx.beginPath(); ctx.arc(ex1,ey1,glow,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(ex2,ey2,glow,0,Math.PI*2); ctx.fill();
+      ctx.shadowBlur=0;
+    }
+
+    // throwing arm: swings from a wind-up overhead down through release, on top of everything
+    // else — the cutout has no separate limb layer, so this drawn arc is what sells the throw
+    if (princess.throwT>0){
+      const p2 = 1 - (princess.throwT/THROW_ANIM_DUR);
+      const swing = Math.sin(Math.min(1,p2)*Math.PI);
+      const shx = w*0.248, shy = -h*0.672;
+      const armLen = h*0.42;
+      const armAngle = -1.9 + swing*2.6;
+      const ax = shx + Math.cos(armAngle)*armLen, ay = shy + Math.sin(armAngle)*armLen;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,252,240,1)';
+      ctx.lineWidth = 3.2;
+      ctx.lineCap = 'round';
+      ctx.shadowColor = 'rgba(255,252,240,0.9)'; ctx.shadowBlur = 6;
+      ctx.beginPath(); ctx.moveTo(shx,shy); ctx.lineTo(ax,ay); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,252,240,1)';
+      ctx.beginPath(); ctx.arc(ax,ay,3,0,Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+  function drawReaperShape(scale, sway){
+    ctx.save();
+    ctx.scale(scale, scale);
+    ctx.rotate(sway||0);
+    ctx.fillStyle = '#0a0a0d';
+    ctx.beginPath();
+    ctx.moveTo(0,-38);
+    ctx.quadraticCurveTo(17,-30,15,0);
+    ctx.lineTo(21,27);
+    ctx.lineTo(-21,27);
+    ctx.lineTo(-15,0);
+    ctx.quadraticCurveTo(-17,-30,0,-38);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#000'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(0,-14,9,11,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,238,180,0.95)';
+    ctx.shadowColor = '#fff3b0'; ctx.shadowBlur = 9;
+    ctx.beginPath(); ctx.arc(-4,-15,1.7,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(4,-15,1.7,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.strokeStyle = '#555'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(21,20); ctx.lineTo(36,-32); ctx.stroke();
+    ctx.strokeStyle = '#ddd'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.arc(36,-16,17,Math.PI*1.05,Math.PI*1.85); ctx.stroke();
+    ctx.restore();
+  }
+  function drawReaper(){
+    if (!reaper || !reaperSpawned) return;
+    const sway = Math.sin(reaper.walkPhase)*0.05;
+    ctx.save();
+    ctx.translate(reaper.x, reaper.y);
+    drawReaperShape(1, sway);
+    ctx.restore();
+  }
+  function drawVisionMask(){
+    // build the darkness + "holes" entirely on the offscreen mask buffer, then stamp the
+    // finished mask onto the main canvas in one source-over draw. Cutting holes with
+    // destination-out directly on the main canvas would erase the already-drawn scene
+    // (player, princess, candles) instead of just letting it show through undimmed.
+    maskCtx.clearRect(0,0,W,H);
+    maskCtx.globalCompositeOperation = 'source-over';
+    maskCtx.fillStyle = 'rgba(4,2,2,0.10)';
+    maskCtx.fillRect(0,0,W,H);
+    maskCtx.globalCompositeOperation = 'destination-out';
+    let g = maskCtx.createRadialGradient(player.x,player.y,4,player.x,player.y,190);
+    g.addColorStop(0,'rgba(0,0,0,1)'); g.addColorStop(1,'rgba(0,0,0,0)');
+    maskCtx.fillStyle=g; maskCtx.beginPath(); maskCtx.arc(player.x,player.y,190,0,Math.PI*2); maskCtx.fill();
+    if (flashlightOn && battery>0){
+      maskCtx.save();
+      maskCtx.translate(player.x,player.y); maskCtx.rotate(player.angle);
+      const len=520, spread=0.55;
+      let cg = maskCtx.createRadialGradient(0,0,10,0,0,len);
+      cg.addColorStop(0,'rgba(0,0,0,1)'); cg.addColorStop(0.7,'rgba(0,0,0,0.9)'); cg.addColorStop(1,'rgba(0,0,0,0)');
+      maskCtx.fillStyle=cg;
+      maskCtx.beginPath(); maskCtx.moveTo(0,0);
+      maskCtx.arc(0,0,len,-spread,spread); maskCtx.closePath(); maskCtx.fill();
+      maskCtx.restore();
+    }
+    // she glows on her own — let her presence punch a soft hole through the darkness
+    // so she's visible approaching from a distance, not just when the flashlight hits her
+    if (princess){
+      const pr = 115 + princess.angryPulse*95;
+      let pg = maskCtx.createRadialGradient(princess.x,princess.y,2,princess.x,princess.y,pr);
+      pg.addColorStop(0,'rgba(0,0,0,0.95)'); pg.addColorStop(1,'rgba(0,0,0,0)');
+      maskCtx.fillStyle=pg; maskCtx.beginPath(); maskCtx.arc(princess.x,princess.y,pr,0,Math.PI*2); maskCtx.fill();
+    }
+    // lit candles keep lighting up their patch of the room permanently
+    for (const c of LEVELS[level].candles){
+      if (!candlesFound.includes(c)) continue;
+      let cg2 = maskCtx.createRadialGradient(c.x,c.y,2,c.x,c.y,135);
+      cg2.addColorStop(0,'rgba(0,0,0,0.9)'); cg2.addColorStop(1,'rgba(0,0,0,0)');
+      maskCtx.fillStyle=cg2; maskCtx.beginPath(); maskCtx.arc(c.x,c.y,135,0,Math.PI*2); maskCtx.fill();
+    }
+    if (reaper && reaperSpawned){
+      let rg = maskCtx.createRadialGradient(reaper.x,reaper.y,2,reaper.x,reaper.y,55);
+      rg.addColorStop(0,'rgba(0,0,0,0.7)'); rg.addColorStop(1,'rgba(0,0,0,0)');
+      maskCtx.fillStyle=rg; maskCtx.beginPath(); maskCtx.arc(reaper.x,reaper.y,55,0,Math.PI*2); maskCtx.fill();
+    }
+    ctx.drawImage(maskCanvas, 0, 0);
+  }
+
+  function drawStatic(amount){
+    ctx.save();
+    ctx.globalAlpha = amount;
+    for (let i=0;i<26;i++){
+      ctx.fillStyle = Math.random()<0.5 ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)';
+      ctx.fillRect(Math.random()*W, Math.random()*H, Math.random()*90+10, Math.random()*2.5+1);
+    }
+    ctx.restore();
+  }
+  function drawDangerVignette(pulse){
+    ctx.save();
+    const g = ctx.createRadialGradient(W/2,H/2,H*0.28,W/2,H/2,H*0.75);
+    g.addColorStop(0,'rgba(150,0,0,0)');
+    g.addColorStop(1,`rgba(150,0,0,${0.35*pulse})`);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  }
+
+  function draw(){
+    const cfg = LEVELS[level];
+    drawFloor();
+    drawWalls();
+    drawObstacles(cfg.obstacles||[]);
+    for (const c of cfg.candles) drawCandle(c, candlesFound.includes(c));
+    drawDoor(candlesFound.length===cfg.candles.length);
+    drawPrincess();
+    drawThrowBurst();
+    drawReaper();
+    for (const k of cakes) drawCake(k, cfg.cakeColor);
+    for (const k of cables) drawCable(k);
+    drawPlayer();
+    if (state==='playing') drawVisionMask();
+
+    if (state==='playing'){
+      // rising dread: danger red vignette when something is closing in
+      let threat = 0;
+      if (princess && !princess.watched){
+        const pd = Math.hypot(player.x-princess.x, player.y-princess.y);
+        threat = Math.max(threat, Math.max(0, 1 - pd/300) * (0.4+princess.angryPulse*0.6));
+      }
+      if (reaper && reaperSpawned){
+        const rd = Math.hypot(player.x-reaper.x, player.y-reaper.y);
+        threat = Math.max(threat, Math.max(0, 1 - rd/260));
+      }
+      if (threat>0.02){
+        const pulse = threat * (0.6+0.4*Math.sin(clock*9));
+        drawDangerVignette(pulse);
+      }
+      if (reaperFlash>0){
+        ctx.save();
+        ctx.fillStyle = `rgba(255,255,255,${(reaperFlash/0.4)*0.8})`;
+        ctx.fillRect(0,0,W,H);
+        ctx.restore();
+      }
+      if (cakeHitFlash>0){
+        ctx.save();
+        ctx.fillStyle = `rgba(255,120,40,${cakeHitFlash*0.55})`;
+        ctx.fillRect(0,0,W,H);
+        ctx.restore();
+      }
+      // level-scaled glitch flicker
+      const glitchChance = [0.0015, 0.004, 0.008][level] || 0.008;
+      if (Math.random() < glitchChance) drawStatic(0.12+Math.random()*0.1);
+      // countdown warning before the reaper wakes, level 3 only
+      if (reaper && !reaperSpawned && reaperTimer < 5){
+        ctx.save();
+        ctx.font = "16px 'Creepster', cursive";
+        ctx.textAlign = 'center';
+        ctx.fillStyle = `rgba(255,45,45,${0.4+0.4*Math.sin(clock*6)})`;
+        ctx.fillText('SOMETHING IS COMING', W/2, 34);
+        ctx.restore();
+      }
+    }
+
+    if (state==='jumpscare' || state==='win_pending'){
+      // fullscreen closeup with shake / flash
+      const t = jumpT;
+      const shakeX = (Math.random()-0.5)* (state==='jumpscare'? 26:6);
+      const shakeY = (Math.random()-0.5)* (state==='jumpscare'? 26:6);
+      ctx.save();
+      ctx.translate(shakeX,shakeY);
+      if (state==='jumpscare'){
+        ctx.fillStyle = t<0.15 ? '#ff2d2d' : '#050202';
+        ctx.fillRect(-30,-30,W+60,H+60);
+        if (causeOfDeath==='reaper'){
+          const scale = 1.6 + Math.min(2.4, t*3);
+          ctx.save();
+          ctx.translate(W/2, H/2-20);
+          drawReaperShape(scale, 0);
+          ctx.restore();
+        } else if (spriteReady){
+          const scale = 1.4 + Math.min(2.2, t*3);
+          const w = spriteCanvas.width*0.5*scale, h = spriteCanvas.height*0.5*scale;
+          ctx.drawImage(spriteCanvas, W/2-w/2, H/2-h/2-40, w, h);
+          if (t>0.1){
+            const ex1 = W/2-w/2+EYE_L.x*w, ey1=H/2-h/2-40+EYE_L.y*h;
+            const ex2 = W/2-w/2+EYE_R.x*w, ey2=H/2-h/2-40+EYE_R.y*h;
+            ctx.fillStyle='rgba(255,0,0,0.9)'; ctx.shadowColor='#f00'; ctx.shadowBlur=25;
+            ctx.beginPath(); ctx.arc(ex1,ey1,7,0,Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(ex2,ey2,7,0,Math.PI*2); ctx.fill();
+            ctx.shadowBlur=0;
+          }
+        }
+        drawStatic(0.18);
+      } else {
+        ctx.fillStyle='rgba(255,220,150,0.15)'; ctx.fillRect(-30,-30,W+60,H+60);
+      }
+      ctx.restore();
+    }
+  }
+
+  function loop(ts){
+    if (lastTime===null) lastTime = ts;
+    const dt = Math.min(0.05, (ts-lastTime)/1000);
+    lastTime = ts;
+
+    if (state==='playing') update(dt);
+    if (state==='jumpscare'){
+      jumpT += dt;
+      if (jumpT>1.1){ state='ended'; showEnd(false); }
+    }
+    if (state==='win_pending'){
+      jumpT += dt;
+      if (jumpT>1.0){ state='ended'; showEnd(true); }
+    }
+    if (state==='lose_out'){
+      jumpT += dt;
+      if (jumpT>0){ state='jumpscare'; jumpT=0; }
+    }
+    draw();
+    if (state!=='ended') requestAnimationFrame(loop);
+  }
+
+  // idle preview render before start
+  function idleDraw(){
+    if (state==='start'){
+      drawFloor(); drawWalls();
+      for (const c of LEVELS[0].candles) drawCandle(c,false);
+      drawDoor(false);
+      if (spriteReady){ princess.x=W/2; princess.y=H/2; drawPrincess(); }
+      requestAnimationFrame(idleDraw);
+    }
+  }
+
+  // procedural flailing arms + legs, drawn as swinging ink-style lines on top of the static
+  // cutout — the source art is one flat paper-doll cutout with no separate limb layers, so
+  // this is what stands in for actual limb articulation
+  function drawFlailingLimbs(c, w, h, phase){
+    const armLen = h*0.4, legLen = h*0.32;
+    const shL = {x:-w*0.25, y:-h*0.67}, shR = {x:w*0.25, y:-h*0.67};
+    const hipL = {x:-w*0.15, y:-h*0.05}, hipR = {x:w*0.15, y:-h*0.05};
+    c.save();
+    c.strokeStyle = 'rgba(255,252,240,1)';
+    c.lineWidth = 3;
+    c.lineCap = 'round';
+    c.shadowColor = 'rgba(255,252,240,0.9)'; c.shadowBlur = 5;
+    const a1 = Math.sin(phase)*1.1;
+    c.beginPath(); c.moveTo(shL.x,shL.y); c.lineTo(shL.x+Math.sin(a1)*armLen, shL.y+Math.cos(a1)*armLen); c.stroke();
+    const a2 = Math.sin(phase+Math.PI)*1.1;
+    c.beginPath(); c.moveTo(shR.x,shR.y); c.lineTo(shR.x+Math.sin(a2)*armLen, shR.y+Math.cos(a2)*armLen); c.stroke();
+    const l1 = Math.sin(phase*1.6)*0.6;
+    c.beginPath(); c.moveTo(hipL.x,hipL.y); c.lineTo(hipL.x+Math.sin(l1)*legLen, hipL.y+Math.cos(l1)*legLen); c.stroke();
+    const l2 = Math.sin(phase*1.6+Math.PI)*0.6;
+    c.beginPath(); c.moveTo(hipR.x,hipR.y); c.lineTo(hipR.x+Math.sin(l2)*legLen, hipR.y+Math.cos(l2)*legLen); c.stroke();
+    c.shadowBlur = 0;
+    c.restore();
+  }
+
+  // a furious little bouncing dance, reused for both the opening screen and the level-complete
+  // screen: she bounces around the whole box, spins/squashes, and flails limbs on top
+  function makeBouncingDancer(canvasEl, c2d, isActiveFn){
+    let bx = canvasEl.width/2, by = canvasEl.height/2;
+    let bvx = 94, bvy = 74, phase = 0, last = null;
+    function frame(ts){
+      if (!isActiveFn()){ last = null; return; }
+      if (last===null) last = ts;
+      const dt = Math.min(0.05, (ts-last)/1000);
+      last = ts;
+      const bw = canvasEl.width, bh = canvasEl.height, margin = 44;
+      phase += dt*9;
+      bx += bvx*dt; by += bvy*dt;
+      if (bx < margin || bx > bw-margin){ bvx = -bvx; bx = Math.max(margin, Math.min(bw-margin, bx)); }
+      if (by < margin || by > bh-margin){ bvy = -bvy; by = Math.max(margin, Math.min(bh-margin, by)); }
+      c2d.clearRect(0,0,bw,bh);
+      if (spriteReady){
+        const w = 58, h = w*spriteCanvas.height/spriteCanvas.width;
+        const wob = Math.sin(phase*1.7)*0.5;
+        const squash = 1 - Math.abs(Math.sin(phase*0.5))*0.12;
+        c2d.save();
+        c2d.translate(bx,by);
+        c2d.rotate(wob);
+        c2d.scale(1/squash, squash);
+        c2d.shadowColor = 'rgba(255,120,110,0.85)'; c2d.shadowBlur = 9;
+        c2d.globalAlpha = 0.85;
+        const offs = [[-1.2,0],[1.2,0],[0,-1.2],[0,1.2]];
+        for (const [ox,oy] of offs) c2d.drawImage(spriteCanvas, -w/2+ox, -h+oy, w, h);
+        c2d.globalAlpha = 1;
+        c2d.shadowBlur = 3;
+        c2d.drawImage(spriteCanvas, -w/2, -h, w, h);
+        c2d.shadowBlur = 0;
+        // demonic red tint, masked to her linework only — furious, not bloody
+        c2d.globalCompositeOperation = 'source-atop';
+        c2d.fillStyle = 'rgba(200,30,30,0.22)';
+        c2d.fillRect(-w/2,-h,w,h);
+        c2d.globalCompositeOperation = 'source-over';
+        const ex1 = -w/2+EYE_L.x*w, ey1 = -h+EYE_L.y*h;
+        const ex2 = -w/2+EYE_R.x*w, ey2 = -h+EYE_R.y*h;
+        c2d.fillStyle = 'rgba(255,60,50,0.9)'; c2d.shadowColor = '#ff3020'; c2d.shadowBlur = 6;
+        c2d.beginPath(); c2d.arc(ex1,ey1,2.2,0,Math.PI*2); c2d.fill();
+        c2d.beginPath(); c2d.arc(ex2,ey2,2.2,0,Math.PI*2); c2d.fill();
+        c2d.shadowBlur = 0;
+        drawFlailingLimbs(c2d, w, h, phase);
+        c2d.restore();
+      }
+      requestAnimationFrame(frame);
+    }
+    return function start(){ last = null; requestAnimationFrame(frame); };
+  }
+  const startScreenDance = makeBouncingDancer(walkCanvas, wctx, ()=>state==='start');
+  const levelCompleteDance = makeBouncingDancer(danceCanvas, dctx, ()=>state==='level_complete');
+
+  // ---------- demonic opening-screen beat ----------
+  // browsers block audio before any user gesture, so this arms on the first click/keypress
+  // anywhere and then loops for as long as the start screen is up
+  let openingBeatTimer = null;
+  function kickDrum(){
+    if (!ac) return;
+    const t = ac.currentTime;
+    const o = ac.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(150,t); o.frequency.exponentialRampToValueAtTime(45,t+0.12);
+    const g = ac.createGain(); g.gain.setValueAtTime(0.6,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.18);
+    o.connect(g); g.connect(masterGain);
+    o.start(t); o.stop(t+0.2);
+  }
+  function bounceWobble(baseFreq, dur){
+    if (!ac) return;
+    const t = ac.currentTime;
+    const o = ac.createOscillator(); o.type = 'sawtooth';
+    o.frequency.setValueAtTime(baseFreq*2, t);
+    o.frequency.exponentialRampToValueAtTime(Math.max(20,baseFreq*0.5), t+dur*0.9);
+    const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = 9;
+    f.frequency.setValueAtTime(1400,t); f.frequency.exponentialRampToValueAtTime(140,t+dur*0.9);
+    const g = ac.createGain(); g.gain.setValueAtTime(0.26,t); g.gain.exponentialRampToValueAtTime(0.0001,t+dur*0.95);
+    o.connect(f); f.connect(g); g.connect(masterGain);
+    o.start(t); o.stop(t+dur);
+  }
+  function scheduleOpeningBeat(){
+    if (openingBeatTimer || !ac) return;
+    const bpm = 140, stepDur = 60/bpm/2; // 8th notes, demonic Melbourne-bounce tempo
+    let step = 0;
+    function playStep(){
+      if (state !== 'start'){ openingBeatTimer = null; return; }
+      if (step % 4 === 0) kickDrum();
+      if (step % 2 === 1) bounceWobble(48 + (step%8===3 ? 16 : 0), stepDur);
+      step = (step+1) % 8;
+      openingBeatTimer = setTimeout(playStep, stepDur*1000);
+    }
+    playStep();
+  }
+  function stopOpeningBeat(){
+    if (openingBeatTimer){ clearTimeout(openingBeatTimer); openingBeatTimer = null; }
+  }
+  function armOpeningBeat(){
+    initAudio();
+    if (state==='start') scheduleOpeningBeat();
+  }
+  window.addEventListener('pointerdown', armOpeningBeat, {once:true});
+  window.addEventListener('keydown', armOpeningBeat, {once:true});
+
+  resetGame();
+  idleDraw();
+  startScreenDance();
+})();
+</script>
